@@ -105,6 +105,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                autoComplete="off"
                 className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
@@ -118,6 +119,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                autoComplete="off"
                 className={`w-full p-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${
                   emailError ? "border-red-500" : "border-gray-300"
                 }`}
@@ -139,6 +141,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                autoComplete="off"
                 className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
@@ -152,6 +155,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                autoComplete="off"
                 className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
@@ -169,6 +173,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                autoComplete="off"
                 className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
@@ -199,6 +204,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                autoComplete="off"
                 className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
@@ -211,6 +217,7 @@ const Register = () => {
                 value={formData.openingBalance}
                 onChange={handleChange}
                 disabled={loading}
+                autoComplete="off"
                 className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
@@ -228,6 +235,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                autoComplete="off"
                 className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
@@ -241,6 +249,7 @@ const Register = () => {
                 onChange={handleChange}
                 required
                 disabled={loading}
+                autoComplete="off"
                 className="w-full p-3 border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
               />
             </div>
