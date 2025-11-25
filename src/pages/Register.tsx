@@ -96,7 +96,7 @@ const Register = () => {
           {/* Name & Email */}
           <div className="flex flex-col sm:flex-row sm:space-x-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
               <input
                 type="text"
                 name="name"
@@ -110,7 +110,7 @@ const Register = () => {
               />
             </div>
             <div className="flex-1 mt-4 sm:mt-0">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
               <input
                 type="email"
                 name="email"
@@ -132,7 +132,7 @@ const Register = () => {
           {/* Mobile & Country */}
           <div className="flex flex-col sm:flex-row sm:space-x-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mobile *</label>
               <input
                 type="text"
                 name="mobile"
@@ -146,7 +146,7 @@ const Register = () => {
               />
             </div>
             <div className="flex-1 mt-4 sm:mt-0">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
               <input
                 type="text"
                 name="country"
@@ -164,7 +164,7 @@ const Register = () => {
           {/* Account Name & Type */}
           <div className="flex flex-col sm:flex-row sm:space-x-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Account Name *</label>
               <input
                 type="text"
                 name="accountName"
@@ -178,7 +178,7 @@ const Register = () => {
               />
             </div>
             <div className="flex-1 mt-4 sm:mt-0">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Account Type *</label>
               <select
                 name="accountType"
                 value={formData.accountType}
@@ -195,7 +195,7 @@ const Register = () => {
           {/* Currency & Opening Balance */}
           <div className="flex flex-col sm:flex-row sm:space-x-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Currency *</label>
               <input
                 type="text"
                 name="currency"
@@ -226,7 +226,7 @@ const Register = () => {
           {/* Password & Confirm Password */}
           <div className="flex flex-col sm:flex-row sm:space-x-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
               <input
                 type="password"
                 name="password"
@@ -240,7 +240,7 @@ const Register = () => {
               />
             </div>
             <div className="flex-1 mt-4 sm:mt-0">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password *</label>
               <input
                 type="password"
                 name="confirmPassword"
