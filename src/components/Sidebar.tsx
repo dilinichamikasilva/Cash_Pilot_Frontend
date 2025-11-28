@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import logo from "../assets/cashPilot-logo.png";
 import MenuItem from "./MenuItem";
+import {Link} from "react-router-dom"
 
 type SidebarProps = {
   open: boolean;
@@ -49,13 +50,31 @@ export default function Sidebar({ open, setOpen, mobileOpen, setMobileOpen }: Si
           </div>
 
           {/* Menu Items */}
-          <nav className="flex flex-col gap-3 text-slate-700 font-medium">
+            <nav className="flex flex-col gap-3 text-slate-700 font-medium">
+              <Link to="/dashboard">
+                <MenuItem icon={<LayoutDashboard />} label="Dashboard" open={open} />
+              </Link>
+              <Link to="/budget">
+                <MenuItem icon={<PiggyBank />} label="Budget" open={open} /> 
+              </Link>
+              <Link to="/accounts">
+                <MenuItem icon={<Wallet />} label="Accounts" open={open} />
+              </Link>
+              <Link to="/reports">
+                <MenuItem icon={<BarChart3 />} label="Reports" open={open} />
+              </Link>
+              <Link to="/settings">
+                <MenuItem icon={<Settings />} label="Settings" open={open} />
+              </Link>
+            </nav>
+          {/* <nav className="flex flex-col gap-3 text-slate-700 font-medium">
             <MenuItem icon={<LayoutDashboard />} label="Dashboard" open={open} />
             <MenuItem icon={<Wallet />} label="Accounts" open={open} />
             <MenuItem icon={<BarChart3 />} label="Reports" open={open} />
             <MenuItem icon={<PiggyBank />} label="Budget" open={open} />
             <MenuItem icon={<Settings />} label="Settings" open={open} />
-          </nav>
+          </nav> */}
+
         </div>
 
         {/* Logout */}
