@@ -4,6 +4,8 @@ import { useState } from "react";
 import api from "../service/api";
 import logo from "../assets/cashPilot-logo.png";
 import GoogleLogin from "../components/GoogleLogin"
+import toast from "react-hot-toast";
+
 
 
 const Login = () => {
@@ -27,37 +29,19 @@ const Login = () => {
 
       localStorage.setItem("accessToken", accessToken);
       setUser(user);
+
+      toast.success("Logged in successfully! 🎉");
       navigate("/dashboard");
+
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed!");
+      const message = err.response?.data?.message || "Login failed!";
+      setError(message)
+      toast.error(message);
+      
     } finally {
       setLoading(false);
     }
   };
-
-  // // GOOGLE LOGIN HANDLER
-  // const handleGoogleLogin = async (token: string) => {
-  //   setError("")
-  //   setLoading(true)
-
-  //   try {
-  //     const response = await api.post("/auth/google-login", {
-  //       idToken: token,
-  //     });
-
-  //     const { accessToken, user } = response.data;
-
-  //     localStorage.setItem("accessToken", accessToken);
-  //     setUser(user);
-
-  //     navigate("/dashboard");
-  //   } catch (err) {
-  //     console.error("Google Login error" , err);
-  //     setError("Google Login failed!");
-  //   } finally{
-  //     setLoading(false)
-  //   }
-  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
@@ -140,16 +124,9 @@ const Login = () => {
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        {/* Google Login */}
+        
         <div className="flex justify-center">
           <GoogleLogin />
-          {/* <GoogleLogin
-            onSuccess={() => handleGoogleLogin()}
-            onError={() => setError("Google login failed")}
-            size="large"
-            shape="pill"
-            width="100%"
-          /> */}
         </div>
 
         {/* Register Link */}

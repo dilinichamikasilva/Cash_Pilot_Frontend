@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/authContext";
+import toast from "react-hot-toast"
 
 declare global {
   interface Window {
@@ -30,14 +31,19 @@ const GoogleLogin = () => {
         return;
       }
 
+      //save tokens
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("refreshToken", data.refreshToken);
 
+      //save user
       setUser(data.user);
 
-      navigate("/dashboard");
+      toast.success("Login successful! Redirecting...");
+      setTimeout(() => navigate("/dashboard"), 1000);
+
     } catch (err) {
-      console.error("Google login failed:", err);
+        toast.error("Google login failed!");
+        console.error("Google login failed:", err);
     }
   };
 
