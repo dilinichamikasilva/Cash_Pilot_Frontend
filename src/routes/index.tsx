@@ -4,6 +4,7 @@ import Register from "../pages/Register"
 import HomePage from "../pages/HomePage"
 import Dashboard from "../pages/Dashboard"
 import Budget from "../pages/Budget"
+import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
     return (
@@ -12,8 +13,25 @@ const AppRoutes = () => {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/budget" element={<Budget />} />
+
+                {/* protected pages */}
+
+                <Route 
+                    path="/dashboard" element={
+                        <ProtectedRoute>
+                            <Dashboard />
+                        </ProtectedRoute>
+                    } 
+                />
+
+                <Route 
+                    path="/budget" element={
+                        <ProtectedRoute>
+                            <Budget />
+                        </ProtectedRoute>
+                    } 
+                />
+                
 
             </Routes>
         </Router>
