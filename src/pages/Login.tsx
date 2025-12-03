@@ -25,9 +25,10 @@ const Login = () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       const response = await api.post("/auth/login", { email, password });
-      const { user, accessToken } = response.data;
+      const { user, accessToken , refreshToken} = response.data;
 
       localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
       setUser(user);
 
       toast.success("Logged in successfully! 🎉");
