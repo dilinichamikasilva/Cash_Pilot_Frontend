@@ -30,7 +30,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
         />
       )}
 
-      <aside
+      {/* <aside
         className={`
           fixed lg:static z-40 top-16 left-0      
           min-h-[calc(100vh-4rem)]                
@@ -41,7 +41,23 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
           transition-transform duration-300
           ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
-      >
+      > */}
+      <aside
+          className={`
+            fixed lg:static top-16 left-0
+            min-h-[calc(100vh-4rem)]
+            w-72
+            bg-white/90 backdrop-blur-xl 
+            shadow-2xl border-r border-slate-200 
+            p-5 flex flex-col justify-between
+            transition-transform duration-300
+            ${
+              mobileOpen
+                ? "translate-x-0 z-40"
+                : "-translate-x-full -z-10 lg:translate-x-0 lg:z-40"
+            }
+          `}
+        >
         <div>
           <div className="flex items-center gap-3 mb-10">
             <img src={logo} alt="CashPilot" className="w-12 h-12 drop-shadow" />
