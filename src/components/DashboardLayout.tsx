@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Topbar />
 
         {/* Page content */}
-        <main className="px-6 md:px-10 pt-28 pb-10">
+        <main className="px-6 md:px-10 pt-5 pb-10">
           {children}
         </main>
       </div>

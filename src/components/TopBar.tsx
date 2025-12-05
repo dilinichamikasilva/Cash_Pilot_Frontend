@@ -11,37 +11,26 @@ export default function Topbar() {
     if (!user?.accountId) return;
 
     api
-      .get(`/account/${user.accountId}`) 
-      .then((res) => {
-        setAccountName(res.data.account.name);
-      })
-      .catch(() => {
-        setAccountName("Account");
-      });
+      .get(`/account/${user.accountId}`)
+      .then((res) => setAccountName(res.data.account.name))
+      .catch(() => setAccountName("Account"));
   }, [user]);
 
   return (
     <div
       className="
-        fixed top-0 right-0 
-        left-0 lg:left-20 xl:left-72 
-        h-16
+        w-full 
+        h-16 
         bg-white/90 backdrop-blur-xl 
         shadow-md border-b border-slate-200 
-        z-40 px-6 flex items-center justify-between
+        px-6 flex items-center justify-between
       "
     >
-      <h2 className="text-xl font-semibold text-slate-800">
-        {accountName}
-      </h2>
+      <h2 className="text-xl font-semibold text-slate-800">{accountName}</h2>
 
       <div className="w-12 h-12 rounded-full bg-gray-200 border flex items-center justify-center shadow overflow-hidden">
         {user?.picture ? (
-          <img
-            src={user.picture}
-            alt="profile"
-            className="w-full h-full object-cover"
-          />
+          <img src={user.picture} alt="profile" className="w-full h-full object-cover" />
         ) : (
           <UserIcon className="text-gray-500 w-8 h-8" />
         )}
