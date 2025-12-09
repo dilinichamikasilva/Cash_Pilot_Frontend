@@ -3,6 +3,7 @@ import Login from "../pages/Login"
 import Register from "../pages/Register"
 import HomePage from "../pages/HomePage"
 import Dashboard from "../pages/Dashboard"
+import Budget from "../pages/Budget"
 import CompleteRegistration  from "../pages/CompleteRegistration"
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -25,13 +26,13 @@ const AppRoutes = () => {
                     } 
                 />
 
-                {/* <Route 
+                <Route 
                     path="/budget" element={
                         <ProtectedRoute>
                             <Budget />
                         </ProtectedRoute>
                     } 
-                /> */}
+                />
 
                 <Route 
                     path="/complete-registration" element={
