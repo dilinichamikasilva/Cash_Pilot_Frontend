@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/authContext";
+import { Link } from "react-router-dom";
 import api from "../service/api";
 import AllocationModal from "../components/AllocationModal";
 import DashboardLayout from "../components/DashboardLayout";
@@ -174,6 +175,18 @@ export default function BudgetPage() {
           />
         )}
       </div>
+      
+      <div className="mt-6 flex justify-end">
+        <Link
+          to={`/view-monthly-budget?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md inline-block"
+        >
+          View Monthly Budget
+        </Link>
+      </div>
+
     </DashboardLayout>
   );
 }
+
+

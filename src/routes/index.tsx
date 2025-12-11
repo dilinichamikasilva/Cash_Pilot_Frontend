@@ -5,6 +5,7 @@ import HomePage from "../pages/HomePage"
 import Dashboard from "../pages/Dashboard"
 import Budget from "../pages/Budget"
 import CompleteRegistration  from "../pages/CompleteRegistration"
+import ViewMonthlyBudget from "../pages/ViewMonthlyBudget"
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -41,7 +42,18 @@ const AppRoutes = () => {
                         </ProtectedRoute>
                     } 
                 />
-                
+
+                <Route 
+                    path="/view-monthly-budget" element={
+                        <ProtectedRoute>
+                            <ViewMonthlyBudget  />
+                        </ProtectedRoute>
+                    } 
+                />
+
+
+
+            
 
             </Routes>
         </Router>
