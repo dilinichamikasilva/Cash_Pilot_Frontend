@@ -6,6 +6,7 @@ import { User as UserIcon } from "lucide-react";
 export default function Topbar() {
   const { user } = useAuth();
   const [accountName, setAccountName] = useState("Loading...");
+  const [imgError, setImgError] = useState(false); // <-- ADD THIS
 
   useEffect(() => {
     if (!user?.accountId) return;
@@ -29,8 +30,13 @@ export default function Topbar() {
       <h2 className="text-xl font-semibold text-slate-800">{accountName}</h2>
 
       <div className="w-12 h-12 rounded-full bg-gray-200 border flex items-center justify-center shadow overflow-hidden">
-        {user?.picture ? (
-          <img src={user.picture} alt="profile" className="w-full h-full object-cover" />
+        {user?.picture && !imgError ? (
+          <img
+            src={user.picture}
+            alt="profile"
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)} // <-- FAILOVER
+          />
         ) : (
           <UserIcon className="text-gray-500 w-8 h-8" />
         )}
