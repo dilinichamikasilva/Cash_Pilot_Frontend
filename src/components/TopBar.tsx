@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/authContext";
+import { useNavigate } from "react-router-dom"; // 1. Import useNavigate
 import api from "../service/api";
 import { getMonthlyAllocation, type CategoryItem } from "../service/budgetService";
 import { 
@@ -9,19 +10,20 @@ import {
   ChevronDown, 
   Settings, 
   LogOut,
-  AlertCircle // Added for the confirmation modal
+  AlertCircle 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import NotificationDropdown from "./NotificationDropdown";
 
 export default function Topbar() {
   const { user, logout } = useAuth(); 
-  
+  const navigate = useNavigate(); // 2. Initialize navigate
+
   const [accountName, setAccountName] = useState("Loading...");
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // New state for confirmation
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); 
   const [imgError, setImgError] = useState(false);
   
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -152,15 +154,22 @@ export default function Topbar() {
                     <p className="text-[10px] font-bold text-slate-400 uppercase">Signed in as</p>
                     <p className="text-xs font-bold text-slate-800 truncate">{user?.email}</p>
                   </div>
-                  <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
-                    <Settings size={16} /> Account
-                  </button>
-                  
-                  {/* Trigger the confirmation modal instead of calling logout immediately */}
+
+                  {/* 3. Updated Settings Button with Navigation */}
                   <button 
                     onClick={() => {
-                      setShowProfileMenu(false); // Close dropdown
-                      setShowLogoutConfirm(true); // Open modal
+                      setShowProfileMenu(false);
+                      navigate("/settings");
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-xl transition-colors"
+                  >
+                    <Settings size={16} /> Account Settings
+                  </button>
+                  
+                  <button 
+                    onClick={() => {
+                      setShowProfileMenu(false); 
+                      setShowLogoutConfirm(true); 
                     }} 
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
                   >

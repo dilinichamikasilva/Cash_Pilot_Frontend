@@ -7,6 +7,7 @@ import Budget from "../pages/Budget"
 import CompleteRegistration  from "../pages/CompleteRegistration"
 import ViewMonthlyBudget from "../pages/ViewMonthlyBudget"
 import UpdateSpendingPage from "../pages/UpdateSpendingPage"
+import SettingsPage from "../pages/SettingsPage"
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -56,6 +57,14 @@ const AppRoutes = () => {
                     path="/update-spending" element={
                         <ProtectedRoute>
                             <UpdateSpendingPage  />
+                        </ProtectedRoute>
+                    } 
+                />
+
+                <Route 
+                    path="/settings" element={
+                        <ProtectedRoute>
+                            <SettingsPage  />
                         </ProtectedRoute>
                     } 
                 />
