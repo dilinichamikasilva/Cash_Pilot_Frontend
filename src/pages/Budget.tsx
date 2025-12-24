@@ -1,9 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/authContext";
 import { Link } from "react-router-dom";
+import { 
+  Plus, 
+  Trash2, 
+  Wallet, 
+  Calendar, 
+  CheckCircle2, 
+  ArrowRight, 
+  PieChart, 
+  AlertCircle 
+} from "lucide-react";
 import api from "../service/api";
 import AllocationModal from "../components/AllocationModal";
 import DashboardLayout from "../components/DashboardLayout";
+import { motion, AnimatePresence } from "framer-motion";
 
 type TempAlloc = { id: string; name: string; budget: number };
 
@@ -20,9 +31,9 @@ export default function BudgetPage() {
   const [tempAllocations, setTempAllocations] = useState<TempAlloc[]>([]);
   const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
 
+  // Logic remains exactly as requested
   useEffect(() => {
     if (!user?.accountId) return;
-
     api.get(`/category/getCategories?accountId=${user.accountId}`)
       .then((res) => setSuggestedCategories(res.data.categories || []))
       .catch(() => setSuggestedCategories([]));
@@ -34,6 +45,7 @@ export default function BudgetPage() {
   );
 
   const remaining = typeof income === "number" ? income - totalAllocated : 0;
+  const percentageAllocated = income ? Math.min((totalAllocated / Number(income)) * 100, 100) : 0;
 
   const handleAddTemp = (name: string, budget: number) => {
     const id = Date.now().toString();
@@ -46,20 +58,14 @@ export default function BudgetPage() {
   const handleSubmit = async () => {
     if (!user?.accountId) return alert("User not loaded");
     const [year, month] = monthYear.split("-");
-
-    if (!income || Number(income) <= 0)
-      return alert("Income required");
-    if (totalAllocated > Number(income))
-      return alert("Allocated exceeds income");
+    if (!income || Number(income) <= 0) return alert("Income required");
+    if (totalAllocated > Number(income)) return alert("Allocated exceeds income");
 
     const payload = {
       month: Number(month),
       year: Number(year),
       totalAllocated: Number(income),
-      categories: tempAllocations.map((t) => ({
-        name: t.name,
-        budget: t.budget,
-      })),
+      categories: tempAllocations.map((t) => ({ name: t.name, budget: t.budget })),
     };
 
     try {
@@ -68,132 +74,181 @@ export default function BudgetPage() {
       setTempAllocations([]);
       setShowModal(false);
     } catch (err: any) {
-      console.error(err);
       alert(err?.response?.data?.message || "Save failed");
     }
   };
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen max-w-4xl mx-auto py-8 px-4">
-
-        <h2 className="text-2xl font-semibold mb-4">
-          Create Monthly Allocation
-        </h2>
-
-        {/* MONTH + INCOME */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div>
-            <label className="block text-sm text-slate-600">Month</label>
-            <input
-              type="month"
-              value={monthYear}
-              onChange={(e) => setMonthYear(e.target.value)}
-              className="mt-1 border rounded-md px-3 py-2 w-full"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-slate-600">Income (LKR)</label>
-            <input
-              type="number"
-              placeholder="150000"
-              value={income}
-              onChange={(e) =>
-                setIncome(e.target.value === "" ? "" : Number(e.target.value))
-              }
-              className="mt-1 border rounded-md px-3 py-2 w-full"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowModal(true)}
-              className="bg-indigo-600 text-white px-4 py-2 rounded-md"
+      <div className="min-h-screen bg-slate-50/50 py-10 px-6">
+        <div className="max-w-5xl mx-auto">
+          
+          {/* HEADER AREA */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Budget Planner</h1>
+              <p className="text-slate-500 mt-1">Plan your monthly financial flight path.</p>
+            </div>
+            <Link
+              to={`/view-monthly-budget?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`}
+              className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm"
             >
-              Proceed
-            </button>
+              <PieChart className="w-4 h-4" /> View History
+            </Link>
+          </div>
 
-            <div className="text-sm text-slate-600">
-              Income: <strong>{income || 0}</strong>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            {/* LEFT: INPUTS & SUMMARY */}
+            <div className="lg:col-span-5 space-y-6">
+              <section className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-indigo-600" /> Setup Month
+                </h3>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Target Month</label>
+                    <input
+                      type="month"
+                      value={monthYear}
+                      onChange={(e) => setMonthYear(e.target.value)}
+                      className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-indigo-500 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Monthly Income (LKR)</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-semibold">Rs.</span>
+                      <input
+                        type="number"
+                        placeholder="0.00"
+                        value={income}
+                        onChange={(e) => setIncome(e.target.value === "" ? "" : Number(e.target.value))}
+                        className="w-full bg-slate-50 border-none rounded-xl pl-12 pr-4 py-3 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-300"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* BALANCE CARD */}
+              <section className="bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full -mr-16 -mt-16"></div>
+                
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-8">
+                    <div>
+                      <p className="text-slate-400 text-sm font-medium">Available to Allocate</p>
+                      <h2 className="text-4xl font-black mt-1">
+                        {remaining.toLocaleString()} <span className="text-lg font-normal opacity-50">LKR</span>
+                      </h2>
+                    </div>
+                    <Wallet className="w-8 h-8 text-indigo-400 opacity-80" />
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Total Allocated</span>
+                      <span className="font-bold">{totalAllocated.toLocaleString()}</span>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <motion.div 
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percentageAllocated}%` }}
+                        className={`h-full rounded-full ${remaining < 0 ? 'bg-red-500' : 'bg-indigo-500'}`}
+                      />
+                    </div>
+                    {remaining < 0 && (
+                      <div className="flex items-center gap-2 text-red-400 text-xs font-bold animate-pulse">
+                        <AlertCircle className="w-4 h-4" /> Exceeds Income
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            {/* RIGHT: ALLOCATIONS LIST */}
+            <div className="lg:col-span-7">
+              <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-full min-h-[500px]">
+                <div className="p-6 border-b border-slate-50 flex justify-between items-center">
+                  <h3 className="text-lg font-bold text-slate-800">Categories</h3>
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all"
+                  >
+                    <Plus className="w-4 h-4" /> Add New
+                  </button>
+                </div>
+
+                <div className="p-6 flex-1">
+                  <AnimatePresence mode="popLayout">
+                    {tempAllocations.length > 0 ? (
+                      <div className="space-y-3">
+                        {tempAllocations.map((t) => (
+                          <motion.div 
+                            key={t.id}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all group"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                                <CheckCircle2 className="w-5 h-5 text-indigo-500" />
+                              </div>
+                              <div>
+                                <div className="font-bold text-slate-800">{t.name}</div>
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Budget: {t.budget.toLocaleString()} LKR</div>
+                              </div>
+                            </div>
+                            <button
+                              className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                              onClick={() => handleRemoveTemp(t.id)}
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-center py-20">
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                          <Plus className="w-8 h-8 text-slate-300" />
+                        </div>
+                        <p className="text-slate-400 font-medium max-w-[200px]">No categories added to your budget yet.</p>
+                      </div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <div className="p-6 bg-slate-50/50 rounded-b-[2rem] border-t border-slate-100">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={!income || tempAllocations.length === 0}
+                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:bg-slate-300 disabled:shadow-none transition-all flex items-center justify-center gap-2 group"
+                  >
+                    Save & Lock Allocations <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-
-        {/* ALLOCATION SUMMARY */}
-        <div className="mt-6 bg-white p-4 rounded border">
-          <div className="flex justify-between">
-            <div>Total allocated: <strong>{totalAllocated}</strong></div>
-            <div>Remaining: <strong>{remaining}</strong></div>
-          </div>
-
-          <ul className="mt-3 space-y-2">
-            {tempAllocations.map((t) => (
-              <li key={t.id} className="flex justify-between items-center border rounded p-2">
-                <div>
-                  <div className="font-medium">{t.name}</div>
-                  <div className="text-sm text-slate-500">{t.budget}</div>
-                </div>
-                <button
-                  className="text-red-600"
-                  onClick={() => handleRemoveTemp(t.id)}
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-
-            {!tempAllocations.length && (
-              <div className="text-sm text-slate-500">No categories added</div>
-            )}
-          </ul>
-
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-3 py-1 border rounded"
-            >
-              Add category
-            </button>
-
-            <button
-              onClick={handleSubmit}
-              className="px-3 py-1 bg-green-600 text-white rounded"
-            >
-              Save allocations
-            </button>
-          </div>
-        </div>
-
-        {showModal && (
-          <AllocationModal
-            onClose={() => setShowModal(false)}
-            onAdd={handleAddTemp}
-            suggestions={suggestedCategories}
-            currentRemaining={remaining}
-            accountId={user?.accountId}
-          />
-        )}
       </div>
-      
-      {/* <div className="mt-6 flex justify-end">
-        <Link
-          to={`/view-monthly-budget?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md inline-block"
-        >
-          View Monthly Budget
-        </Link>
-      </div> */}
 
-      <Link
-        to={`/view-monthly-budget?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md inline-block"
-      >
-        View Monthly Budget
-      </Link>
-
+      {showModal && (
+        <AllocationModal
+          onClose={() => setShowModal(false)}
+          onAdd={handleAddTemp}
+          suggestions={suggestedCategories}
+          currentRemaining={remaining}
+          accountId={user?.accountId}
+        />
+      )}
     </DashboardLayout>
   );
 }
-
-
