@@ -174,7 +174,8 @@ const ViewMonthlyBudget = () => {
                                 {usagePercent.toFixed(0)}%
                               </div>
                             </div>
-                            {/* Modern Progress Bar */}
+                            
+                            {/*  Progress Bar */}
                             <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
                               <motion.div
                                 initial={{ width: 0 }}

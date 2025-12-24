@@ -9,7 +9,8 @@ import {
   CheckCircle2, 
   ArrowRight, 
   PieChart, 
-  AlertCircle 
+  AlertCircle ,
+  Receipt
 } from "lucide-react";
 import api from "../service/api";
 import AllocationModal from "../components/AllocationModal";
@@ -31,7 +32,7 @@ export default function BudgetPage() {
   const [tempAllocations, setTempAllocations] = useState<TempAlloc[]>([]);
   const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
 
-  // Logic remains exactly as requested
+
   useEffect(() => {
     if (!user?.accountId) return;
     api.get(`/category/getCategories?accountId=${user.accountId}`)
@@ -89,6 +90,16 @@ export default function BudgetPage() {
               <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Budget Planner</h1>
               <p className="text-slate-500 mt-1">Plan your monthly financial flight path.</p>
             </div>
+
+            {/* UPDATE SPENDING BUTTON */}
+            <Link
+              to={`/update-spending?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`}
+              className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all border border-indigo-100"
+            >
+              <Receipt className="w-4 h-4" /> Track Actuals
+            </Link>
+
+            {/* VIEW HISTORY BUTTON */}
             <Link
               to={`/view-monthly-budget?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`}
               className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm"
@@ -153,6 +164,7 @@ export default function BudgetPage() {
                       <span className="text-slate-400">Total Allocated</span>
                       <span className="font-bold">{totalAllocated.toLocaleString()}</span>
                     </div>
+
                     {/* Progress Bar */}
                     <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                       <motion.div 

@@ -22,6 +22,24 @@ export interface MonthlyAllocationResponse {
   };
 }
 
+export interface UpdateSpendingPayload {
+  allocationCategoryId: string;
+  actualAmount: number;
+}
+
+// Interface for the response from the spending update
+export interface UpdateSpendingResponse {
+  message: string;
+  data: {
+    categoryName: string;
+    budget: number;
+    actualSpent: number;
+    difference: number;
+    status: "OVERSPENT" | "WITHIN_BUDGET";
+    alertGenerated: boolean;
+  };
+}
+
 export const getMonthlyAllocation = async (
   accountId: string,
   month: number,
@@ -29,6 +47,14 @@ export const getMonthlyAllocation = async (
 ) => {
   const res = await api.get<MonthlyAllocationResponse>(
     `/budget/view-monthly-allocations?accountId=${accountId}&month=${month}&year=${year}`
+  );
+  return res.data;
+};
+
+export const updateCategorySpending = async (payload: UpdateSpendingPayload) => {
+  const res = await api.post<UpdateSpendingResponse>(
+    "/budget/update-spending", 
+    payload
   );
   return res.data;
 };
