@@ -65,3 +65,9 @@ export const addTransaction = async (formData: FormData) => {
   });
   return response.data;
 };
+
+
+export const getTransactionHistory = async (allocationCategoryId: string) => {
+  const response = await api.get(`/transaction/history/${allocationCategoryId}`);
+  return response.data;
+};
