@@ -71,3 +71,9 @@ export const getTransactionHistory = async (allocationCategoryId: string) => {
   const response = await api.get(`/transaction/history/${allocationCategoryId}`);
   return response.data;
 };
+
+
+export const deleteTransaction = async (id: string) => {
+  const response = await api.delete(`/transaction/delete/${id}`);
+  return response.data;
+};
