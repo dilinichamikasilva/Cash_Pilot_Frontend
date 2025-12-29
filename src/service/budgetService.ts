@@ -27,7 +27,7 @@ export interface UpdateSpendingPayload {
   actualAmount: number;
 }
 
-// Interface for the response from the spending update
+
 export interface UpdateSpendingResponse {
   message: string;
   data: {
@@ -57,4 +57,11 @@ export const updateCategorySpending = async (payload: UpdateSpendingPayload) => 
     payload
   );
   return res.data;
+};
+
+export const addTransaction = async (formData: FormData) => {
+  const response = await api.post("/transaction/add-expense", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
 };

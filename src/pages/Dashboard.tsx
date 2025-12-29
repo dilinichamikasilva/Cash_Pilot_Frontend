@@ -1,24 +1,24 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/authContext";
-import { getMonthlyAllocation, type CategoryItem } from "../service/budgetService"; // Added Type Import
+import { getMonthlyAllocation, type CategoryItem } from "../service/budgetService"; 
 import DashboardLayout from "../components/DashboardLayout";
 import StatCard from "../components/StatCard";
 import ChartBox from "../components/ChartBox";
 import { motion } from "framer-motion";
 import { ArrowDownRight, Wallet } from "lucide-react";
 
-// Define the shape of our stats state
+
 interface DashboardStats {
   totalBudget: number;
   totalSpent: number;
   remaining: number;
-  categories: CategoryItem[]; // Fixes the 'never[]' error
+  categories: CategoryItem[]; 
 }
 
 export default function Dashboard() {
   const { user } = useAuth();
   
-  // Initialize state with the defined Interface
+
   const [stats, setStats] = useState<DashboardStats>({
     totalBudget: 0,
     totalSpent: 0,
