@@ -70,32 +70,65 @@ const ViewMonthlyBudget = () => {
     fetchData(month, year, true); 
   }, [accountId, authLoading]);
 
-  const fetchData = async (m: number, y: number, isInitial = false) => {
-    if (!accountId) return;
-    setLoading(true);
-    try {
-      // Logic: Fetch Budget and Account Info (for currency) in parallel
-      const [res, accountRes] = await Promise.all([
-        getMonthlyAllocation(accountId, m, y),
-        api.get(`/account/${accountId}`)
-      ]);
+  // const fetchData = async (m: number, y: number, isInitial = false) => {
+  //   if (!accountId) return;
+  //   setLoading(true);
+  //   try {
+  //     // Logic: Fetch Budget and Account Info (for currency) in parallel
+  //     const [res, accountRes] = await Promise.all([
+  //       getMonthlyAllocation(accountId, m, y),
+  //       api.get(`/account/${accountId}`)
+  //     ]);
 
-      setData(res);
+  //     setData(res);
       
-      // Set dynamic currency from account data
-      if (accountRes.data?.account?.currency) {
-        setCurrency(accountRes.data.account.currency);
-      }
+  //     // Set dynamic currency from account data
+  //     if (accountRes.data?.account?.currency) {
+  //       setCurrency(accountRes.data.account.currency);
+  //     }
 
-      if (!isInitial) showToast("Financial report updated.", "success");
-    } catch (err) {
-      console.error(err);
-      setData(null);
-      showToast("Could not retrieve data for this period.", "error");
-    } finally {
-      setLoading(false);
+  //     if (!isInitial) showToast("Financial report updated.", "success");
+  //   } catch (err) {
+  //     console.error(err);
+  //     setData(null);
+  //     showToast("Could not retrieve data for this period.", "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const fetchData = async (m: number, y: number, isInitial = false) => {
+  if (!accountId) return;
+  setLoading(true);
+  try {
+    // Logic: Fetch Budget and Account Info in parallel
+    const [res, accountRes] = await Promise.all([
+      getMonthlyAllocation(accountId, m, y),
+      api.get(`/account/${accountId}`)
+    ]);
+
+    setData(res);
+    
+    if (accountRes.data?.account?.currency) {
+      setCurrency(accountRes.data.account.currency);
     }
-  };
+
+    if (!isInitial) showToast("Financial report updated.", "success");
+  } catch (err: any) {
+    console.error("Fetch error:", err);
+    setData(null);
+
+    // FIX: Only show the error toast if it's NOT a 404
+    // A 404 just means "No budget created yet", which isn't a system failure.
+    const is404 = err.response?.status === 404;
+    
+    if (!is404) {
+      showToast("Could not retrieve data for this period.", "error");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleView = () => fetchData(month, year);
 

@@ -101,14 +101,14 @@ export default function AllocationModal({
   suggestions = [], 
   currentRemaining = 0,
   accountId,
-  currency // 1. Added currency to destructuring
+  currency 
 }:{ 
   onClose: () => void; 
   onAdd: (name: string, budget: number) => void; 
   suggestions?: string[]; 
   currentRemaining?: number;
   accountId?: string;
-  currency: string; // 2. Added currency to TypeScript interface
+  currency: string; 
 }) {
 
   const [selected, setSelected] = useState<string>(""); 

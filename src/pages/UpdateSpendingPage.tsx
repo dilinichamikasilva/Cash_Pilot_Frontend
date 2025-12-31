@@ -74,6 +74,29 @@ export default function UpdateSpendingPage() {
     }
   }, [user, month, year]);
 
+  // const fetchInitialData = async () => {
+  //   try {
+  //     setIsLoadingPage(true);
+  //     // Fetch Budget and Account Currency in parallel
+  //     const [budgetData, accountRes] = await Promise.all([
+  //       getMonthlyAllocation(user!.accountId, month, year),
+  //       api.get(`/account/${user!.accountId}`) 
+  //     ]);
+
+  //     setCategories(budgetData.categories);
+      
+  //     // Update currency based on account settings
+  //     if (accountRes.data?.account?.currency) {
+  //       setCurrency(accountRes.data.account.currency);
+  //     }
+  //   } catch (err) { 
+  //     setCategories([]); 
+  //     showToast("Failed to sync financial categories.", "error");
+  //   } finally {
+  //     setIsLoadingPage(false);
+  //   }
+  // };
+
   const fetchInitialData = async () => {
     try {
       setIsLoadingPage(true);
@@ -89,9 +112,20 @@ export default function UpdateSpendingPage() {
       if (accountRes.data?.account?.currency) {
         setCurrency(accountRes.data.account.currency);
       }
-    } catch (err) { 
+    } catch (err: any) { 
+      console.error("Fetch error:", err);
       setCategories([]); 
-      showToast("Failed to sync financial categories.", "error");
+
+      // FIX: Check if the error is a 404 (Month not started yet)
+      const is404 = err.response?.status === 404;
+
+      if (!is404) {
+        // Only show error toast for real failures (Network, 500, etc.)
+        showToast("Failed to sync financial categories.", "error");
+      } else {
+        // Log it for debugging, but keep the UI clean
+        console.log("No categories found for this period - showing empty state.");
+      }
     } finally {
       setIsLoadingPage(false);
     }

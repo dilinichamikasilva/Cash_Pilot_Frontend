@@ -32,6 +32,34 @@ export default function BudgetPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isEditingExisting, setIsEditingExisting] = useState(false);
 
+  // // --- Toast Logic ---
+  // const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
+  //   toast.custom((t) => (
+  //     <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 ${
+  //       type === 'success' ? 'border-emerald-500' : type === 'error' ? 'border-rose-500' : 'border-amber-500'
+  //     }`}>
+  //       <div className="flex-1 w-0 p-4">
+  //         <div className="flex items-start">
+  //           <div className="flex-shrink-0 pt-0.5">
+  //             {type === 'success' && <CheckCircle2 className="h-10 w-10 text-emerald-500" />}
+  //             {type === 'error' && <AlertCircle className="h-10 w-10 text-rose-500" />}
+  //             {type === 'warning' && <AlertCircle className="h-10 w-10 text-amber-500" />}
+  //           </div>
+  //           <div className="ml-3 flex-1">
+  //             <p className="text-sm font-bold text-slate-900">
+  //               {type === 'success' ? 'Budget Updated' : type === 'error' ? 'Budget Error' : 'Attention Required'}
+  //             </p>
+  //             <p className="mt-1 text-sm text-slate-500 font-medium">{message}</p>
+  //           </div>
+  //         </div>
+  //       </div>
+  //       <div className="flex border-l border-slate-100">
+  //         <button onClick={() => toast.dismiss(t.id)} className="w-full p-4 text-sm font-bold text-slate-400 hover:text-slate-600 focus:outline-none">Close</button>
+  //       </div>
+  //     </div>
+  //   ), { duration: 4000 });
+  // };
+
   // --- Toast Logic ---
   const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
     toast.custom((t) => (
@@ -46,8 +74,9 @@ export default function BudgetPage() {
               {type === 'warning' && <AlertCircle className="h-10 w-10 text-amber-500" />}
             </div>
             <div className="ml-3 flex-1">
+              {/* UPDATED TITLE LOGIC HERE */}
               <p className="text-sm font-bold text-slate-900">
-                {type === 'success' ? 'Budget Updated' : type === 'error' ? 'Budget Error' : 'Attention Required'}
+                {type === 'success' ? 'Budget Updated' : type === 'error' ? 'Budget Error' : 'New Month Setup'}
               </p>
               <p className="mt-1 text-sm text-slate-500 font-medium">{message}</p>
             </div>
@@ -77,36 +106,73 @@ export default function BudgetPage() {
       .catch(() => setSuggestedCategories([]));
   }, [user]);
 
-  // 2. FETCH EXISTING BUDGET FOR SELECTED MONTH
-  useEffect(() => {
-    if (!user?.accountId || !monthYear) return;
-    const [year, month] = monthYear.split("-");
+  // // 2. FETCH EXISTING BUDGET FOR SELECTED MONTH
+  // useEffect(() => {
+  //   if (!user?.accountId || !monthYear) return;
+  //   const [year, month] = monthYear.split("-");
 
-    api.get(`/budget/view-monthly-allocations?accountId=${user.accountId}&month=${month}&year=${year}`)
-      .then((res) => {
-        if (res.data) {
-          // If budget exists, load it into state
-          setIncome(res.data.allocation.totalAllocated - openingBalance); // Inverse calculation if needed
-          const existingCats = res.data.categories.map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            budget: c.budget
-          }));
-          setTempAllocations(existingCats);
-          setIsEditingExisting(true);
-        } else {
-          setTempAllocations([]);
-          setIncome("");
-          setIsEditingExisting(false);
-        }
-      })
-      .catch(() => {
-        // If 404 or error, assume new budget
-        setTempAllocations([]);
-        setIncome("");
-        setIsEditingExisting(false);
-      });
-  }, [monthYear, user, openingBalance]);
+  //   api.get(`/budget/view-monthly-allocations?accountId=${user.accountId}&month=${month}&year=${year}`)
+  //     .then((res) => {
+  //       if (res.data) {
+  //         // If budget exists, load it into state
+  //         setIncome(res.data.allocation.totalAllocated - openingBalance); // Inverse calculation if needed
+  //         const existingCats = res.data.categories.map((c: any) => ({
+  //           id: c.id,
+  //           name: c.name,
+  //           budget: c.budget
+  //         }));
+  //         setTempAllocations(existingCats);
+  //         setIsEditingExisting(true);
+  //       } else {
+  //         setTempAllocations([]);
+  //         setIncome("");
+  //         setIsEditingExisting(false);
+  //       }
+  //     })
+  //     .catch(() => {
+  //       // If 404 or error, assume new budget
+  //       setTempAllocations([]);
+  //       setIncome("");
+  //       setIsEditingExisting(false);
+  //     });
+  // }, [monthYear, user, openingBalance]);
+  // 2. FETCH EXISTING BUDGET FOR SELECTED MONTH
+
+  useEffect(() => {
+  if (!user?.accountId || !monthYear) return;
+  const [year, month] = monthYear.split("-");
+
+  api.get(`/budget/view-monthly-allocations?accountId=${user.accountId}&month=${month}&year=${year}`)
+    .then((res) => {
+      // If we get data, set it
+      if (res.data) {
+        setIncome(res.data.allocation.totalAllocated - openingBalance); 
+        const existingCats = res.data.categories.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          budget: c.budget
+        }));
+        setTempAllocations(existingCats);
+        setIsEditingExisting(true);
+      }
+    })
+    .catch((err) => {
+      // RESET everything for the new month
+      setTempAllocations([]);
+      setIncome("");
+      setIsEditingExisting(false);
+
+      // CHECK IF 404: If it is, DO NOT show an error.
+      if (err.response?.status === 404) {
+        console.log("New month detected, no existing budget found.");
+        // We do NOT call showToast here with "error" type
+        // Optional: showToast("Plan your budget for this month!", "warning");
+      } else {
+        // Only show "System Error" for 500s or network failures
+        showToast("System Error: Failed to sync data.", "error");
+      }
+    });
+}, [monthYear, user, openingBalance]);
 
   const totalPool = useMemo(() => {
     const currentIncome = typeof income === "number" ? income : 0;

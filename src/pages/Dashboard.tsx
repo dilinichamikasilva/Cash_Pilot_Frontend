@@ -57,7 +57,41 @@ export default function Dashboard() {
     ), { duration: 4000 });
   };
 
-  useEffect(() => {
+//   useEffect(() => {
+//   const fetchDashboardData = async () => {
+//     if (!user?.accountId) return;
+
+//     try {
+//       const now = new Date();
+      
+//       const [budgetData, accountRes] = await Promise.all([
+//         getMonthlyAllocation(user.accountId, now.getMonth() + 1, now.getFullYear()),
+//         api.get(`/account/${user.accountId}`) 
+//       ]);
+
+//       const userCurrency = accountRes.data?.account?.currency || "Rs.";
+
+//       const spent = budgetData.categories.reduce((sum: number, c: CategoryItem) => sum + c.spent, 0);
+      
+//       setStats({
+//         totalBudget: budgetData.allocation.totalAllocated,
+//         totalSpent: spent,
+//         remaining: budgetData.totals.remaining,
+//         categories: budgetData.categories,
+//         currency: userCurrency 
+//       });
+//     } catch (err) {
+//       console.error("Dashboard fetch error:", err);
+//       showToast("Failed to sync your latest financial data.", "error");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   fetchDashboardData();
+// }, [user?.accountId]); 
+
+useEffect(() => {
   const fetchDashboardData = async () => {
     if (!user?.accountId) return;
 
@@ -70,7 +104,6 @@ export default function Dashboard() {
       ]);
 
       const userCurrency = accountRes.data?.account?.currency || "Rs.";
-
       const spent = budgetData.categories.reduce((sum: number, c: CategoryItem) => sum + c.spent, 0);
       
       setStats({
@@ -80,16 +113,26 @@ export default function Dashboard() {
         categories: budgetData.categories,
         currency: userCurrency 
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Dashboard fetch error:", err);
-      showToast("Failed to sync your latest financial data.", "error");
+      
+      // FIX: Check if the error is a 404 (Budget not found for this month)
+      const is404 = err.response?.status === 404;
+
+      if (!is404) {
+        // Only show the toast for REAL system errors (500, Network Down, etc.)
+        showToast("Failed to sync your latest financial data.", "error");
+      } else {
+        // Optional: You could set stats to 0 here explicitly if you want to be safe
+        console.log("No budget found for this month - showing empty state.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   fetchDashboardData();
-}, [user?.accountId]); 
+}, [user?.accountId]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
