@@ -14,13 +14,13 @@ api.interceptors.request.use((config) => {
     return config
 })
 
-// Auto refresh token when 401
+
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
     const originalRequest = err.config;
 
-    // If unauthorized and not already retried
+   
     if (err.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
@@ -34,16 +34,16 @@ api.interceptors.response.use(
 
         const newAccessToken = res.data.accessToken;
 
-        // save new token
+        
         localStorage.setItem("accessToken", newAccessToken);
 
-        // retry original request with new token
+       
         api.defaults.headers.Authorization = `Bearer ${newAccessToken}`;
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         return api(originalRequest);
       } catch {
-        // refresh failed → logout
+     
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         window.location.href = "/";
