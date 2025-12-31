@@ -3,7 +3,7 @@ import { useAuth } from "../context/authContext";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Plus, Trash2, Wallet, Calendar, CheckCircle2, 
-  ArrowRight, PieChart, AlertCircle, Receipt, Loader2, Info
+  ArrowRight, PieChart, AlertCircle, Receipt, Loader2, Edit3
 } from "lucide-react";
 import api from "../service/api";
 import AllocationModal from "../components/AllocationModal";
@@ -25,11 +25,12 @@ export default function BudgetPage() {
   // States
   const [income, setIncome] = useState<number | "">("");
   const [openingBalance, setOpeningBalance] = useState<number>(0);
-  const [currency, setCurrency] = useState<string>("LKR"); // Added Currency State
+  const [currency, setCurrency] = useState<string>("LKR");
   const [showModal, setShowModal] = useState(false);
   const [tempAllocations, setTempAllocations] = useState<TempAlloc[]>([]);
   const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditingExisting, setIsEditingExisting] = useState(false);
 
   // --- Toast Logic ---
   const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
@@ -46,7 +47,7 @@ export default function BudgetPage() {
             </div>
             <div className="ml-3 flex-1">
               <p className="text-sm font-bold text-slate-900">
-                {type === 'success' ? 'Budget Saved' : type === 'error' ? 'Budget Error' : 'Attention Required'}
+                {type === 'success' ? 'Budget Updated' : type === 'error' ? 'Budget Error' : 'Attention Required'}
               </p>
               <p className="mt-1 text-sm text-slate-500 font-medium">{message}</p>
             </div>
@@ -59,28 +60,54 @@ export default function BudgetPage() {
     ), { duration: 4000 });
   };
 
+  // 1. Fetch Account and Suggested Categories
   useEffect(() => {
     if (!user?.accountId) return;
-
- 
+    
     api.get(`/auth/me`) 
       .then((res) => {
         const account = res.data.account;
         setOpeningBalance(account?.openingBalance || 0);
         setCurrency(account?.currency || "LKR");
       })
-      .catch(() => {
-        setOpeningBalance(0);
-        setCurrency("LKR");
-      });
+      .catch(() => setCurrency("LKR"));
 
- 
     api.get(`/category/getCategories?accountId=${user.accountId}`)
       .then((res) => setSuggestedCategories(res.data.categories || []))
       .catch(() => setSuggestedCategories([]));
   }, [user]);
 
-  
+  // 2. FETCH EXISTING BUDGET FOR SELECTED MONTH
+  useEffect(() => {
+    if (!user?.accountId || !monthYear) return;
+    const [year, month] = monthYear.split("-");
+
+    api.get(`/budget/view-monthly-allocations?accountId=${user.accountId}&month=${month}&year=${year}`)
+      .then((res) => {
+        if (res.data) {
+          // If budget exists, load it into state
+          setIncome(res.data.allocation.totalAllocated - openingBalance); // Inverse calculation if needed
+          const existingCats = res.data.categories.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            budget: c.budget
+          }));
+          setTempAllocations(existingCats);
+          setIsEditingExisting(true);
+        } else {
+          setTempAllocations([]);
+          setIncome("");
+          setIsEditingExisting(false);
+        }
+      })
+      .catch(() => {
+        // If 404 or error, assume new budget
+        setTempAllocations([]);
+        setIncome("");
+        setIsEditingExisting(false);
+      });
+  }, [monthYear, user, openingBalance]);
+
   const totalPool = useMemo(() => {
     const currentIncome = typeof income === "number" ? income : 0;
     return openingBalance + currentIncome;
@@ -98,6 +125,12 @@ export default function BudgetPage() {
     : 0;
 
   const handleAddTemp = (name: string, budget: number) => {
+    // Check if category already exists in temp list
+    const exists = tempAllocations.find(cat => cat.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      showToast(`${name} is already in your list.`, "warning");
+      return;
+    }
     const id = Date.now().toString();
     setTempAllocations((s) => [...s, { id, name, budget }]);
   };
@@ -106,15 +139,11 @@ export default function BudgetPage() {
     setTempAllocations((s) => s.filter((x) => x.id !== id));
 
   const handleSubmit = async () => {
-    if (!user?.accountId) {
-      showToast("Session expired.", "error");
-      return;
-    }
-    
+    if (!user?.accountId) return;
     const [year, month] = monthYear.split("-");
     
     if (totalPool <= 0) {
-      showToast(`Please enter income or ensure ${currency} balance exists.`, "warning");
+      showToast(`Please enter income.`, "warning");
       return;
     }
     
@@ -133,12 +162,12 @@ export default function BudgetPage() {
     setIsSaving(true);
     try {
       await api.post("/budget/monthly-allocations", payload);
-      showToast("Monthly budget saved successfully! 🎉", "success");
-      setTempAllocations([]);
-      setShowModal(false);
+      showToast(isEditingExisting ? "Budget updated successfully!" : "Budget locked in! 🎉", "success");
+      
+      // Navigate after a small delay
       setTimeout(() => navigate(`/view-monthly-budget?month=${month}&year=${year}`), 1500);
     } catch (err: any) {
-      showToast(err?.response?.data?.message || "Failed to save budget.", "error");
+      showToast(err?.response?.data?.message || "Failed to save.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -151,16 +180,17 @@ export default function BudgetPage() {
           
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Budget Planner</h1>
-              <p className="text-slate-500 mt-1">Plan your monthly financial flight path.</p>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
+                {isEditingExisting ? "Edit Budget Plan" : "Budget Planner"}
+              </h1>
+              <p className="text-slate-500 mt-1">
+                {isEditingExisting ? `Modifying allocations for ${monthYear}` : "Plan your monthly financial flight path."}
+              </p>
             </div>
 
             <div className="flex gap-3">
-              <Link to={`/update-spending?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`} className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all border border-indigo-100">
+              <Link to={`/update-spending?month=${monthYear.split('-')[1]}&year=${monthYear.split('-')[0]}`} className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all border border-indigo-100">
                 <Receipt className="w-4 h-4" /> Track Actuals
-              </Link>
-              <Link to={`/view-monthly-budget?month=${new Date().getMonth() + 1}&year=${new Date().getFullYear()}`} className="flex items-center gap-2 px-5 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all shadow-sm">
-                <PieChart className="w-4 h-4" /> History
               </Link>
             </div>
           </div>
@@ -176,7 +206,7 @@ export default function BudgetPage() {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Target Month</label>
-                    <input type="month" value={monthYear} onChange={(e) => setMonthYear(e.target.value)} className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 focus:ring-2 focus:ring-indigo-500 transition-all" />
+                    <input type="month" value={monthYear} onChange={(e) => setMonthYear(e.target.value)} className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 transition-all" />
                   </div>
 
                   <div>
@@ -197,13 +227,11 @@ export default function BudgetPage() {
 
               {/* BALANCE CARD */}
               <section className="bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full -mr-16 -mt-16"></div>
-                
                 <div className="relative z-10">
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <p className="text-slate-400 text-sm font-medium">Available to Allocate</p>
-                      <h2 className="text-4xl font-black mt-1">
+                      <p className="text-slate-400 text-sm font-medium">Remaining to Allocate</p>
+                      <h2 className={`text-4xl font-black mt-1 ${remaining < 0 ? 'text-rose-400' : 'text-white'}`}>
                         {remaining.toLocaleString()} <span className="text-lg font-normal opacity-50">{currency}</span>
                       </h2>
                     </div>
@@ -211,12 +239,12 @@ export default function BudgetPage() {
                   </div>
 
                   <div className="flex items-center gap-3 mb-8 bg-slate-800/50 p-3 rounded-2xl border border-white/5">
-                    <div className="flex-1">
-                        <p className="text-[10px] font-black text-slate-500 uppercase">Initial</p>
+                    <div className="flex-1 text-center">
+                        <p className="text-[10px] font-black text-slate-500 uppercase">Opening</p>
                         <p className="text-sm font-bold text-indigo-300">{openingBalance.toLocaleString()}</p>
                     </div>
                     <div className="text-slate-600 font-bold">+</div>
-                    <div className="flex-1">
+                    <div className="flex-1 text-center">
                         <p className="text-[10px] font-black text-slate-500 uppercase">Income</p>
                         <p className="text-sm font-bold text-emerald-400">{(Number(income) || 0).toLocaleString()}</p>
                     </div>
@@ -224,8 +252,8 @@ export default function BudgetPage() {
 
                   <div className="space-y-4">
                     <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Total Allocated</span>
-                      <span className="font-bold">{totalAllocated.toLocaleString()} {currency}</span>
+                      <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Progress</span>
+                      <span className="font-bold">{totalAllocated.toLocaleString()} {currency} spent</span>
                     </div>
 
                     <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
@@ -243,9 +271,9 @@ export default function BudgetPage() {
             <div className="lg:col-span-7">
               <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-full min-h-[500px]">
                 <div className="p-6 border-b border-slate-50 flex justify-between items-center">
-                  <h3 className="text-lg font-bold text-slate-800">Categories</h3>
-                  <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all">
-                    <Plus className="w-4 h-4" /> Add New
+                  <h3 className="text-lg font-bold text-slate-800">Allocations</h3>
+                  <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md active:scale-95">
+                    <Plus className="w-4 h-4" /> Add Category
                   </button>
                 </div>
 
@@ -254,14 +282,14 @@ export default function BudgetPage() {
                     {tempAllocations.length > 0 ? (
                       <div className="space-y-3">
                         {tempAllocations.map((t) => (
-                          <motion.div key={t.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-slate-200 transition-all group">
+                          <motion.div key={t.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-indigo-100 transition-all group">
                             <div className="flex items-center gap-4">
                               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
                                 <CheckCircle2 className="w-5 h-5 text-indigo-500" />
                               </div>
                               <div>
                                 <div className="font-bold text-slate-800">{t.name}</div>
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Budget: {t.budget.toLocaleString()} {currency}</div>
+                                <div className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Plan: {t.budget.toLocaleString()} {currency}</div>
                               </div>
                             </div>
                             <button className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" onClick={() => handleRemoveTemp(t.id)}>
@@ -275,7 +303,7 @@ export default function BudgetPage() {
                         <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
                           <Plus className="w-8 h-8 text-slate-300" />
                         </div>
-                        <p className="text-slate-400 font-medium max-w-[200px]">No categories added yet.</p>
+                        <p className="text-slate-400 font-medium max-w-[200px]">No categories planned for this month yet.</p>
                       </div>
                     )}
                   </AnimatePresence>
@@ -284,10 +312,11 @@ export default function BudgetPage() {
                 <div className="p-6 bg-slate-50/50 rounded-b-[2rem] border-t border-slate-100">
                   <button
                     onClick={handleSubmit}
-                    disabled={totalPool <= 0 || tempAllocations.length === 0 || isSaving}
-                    className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 disabled:bg-slate-300 disabled:shadow-none transition-all flex items-center justify-center gap-2 group"
+                    disabled={tempAllocations.length === 0 || isSaving}
+                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-slate-800 disabled:bg-slate-300 disabled:shadow-none transition-all flex items-center justify-center gap-2 group"
                   >
-                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Save & Lock Allocations <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
+                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : 
+                    <>{isEditingExisting ? 'Update Monthly Budget' : 'Lock Monthly Budget'} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
                   </button>
                 </div>
               </div>
