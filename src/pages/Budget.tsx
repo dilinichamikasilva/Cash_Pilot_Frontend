@@ -189,10 +189,28 @@ export default function BudgetPage() {
             </div>
 
             <div className="flex gap-3">
-              <Link to={`/update-spending?month=${monthYear.split('-')[1]}&year=${monthYear.split('-')[0]}`} className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all border border-indigo-100">
-                <Receipt className="w-4 h-4" /> Track Actuals
+              {/* VIEW SUMMARY BUTTON: Only show if an allocation already exists */}
+              {isEditingExisting && (
+                <Link 
+                  // This maps the YYYY-MM state to ?month=X&year=Y
+                  to={`/view-monthly-budget?month=${parseInt(monthYear.split('-')[1])}&year=${monthYear.split('-')[0]}`} 
+                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all border border-slate-200 shadow-sm"
+                >
+                  <PieChart className="w-4 h-4 text-indigo-500" /> 
+                  View Summary
+                </Link>
+              )}
+
+              {/* TRACK ACTUALS BUTTON */}
+              <Link 
+                to={`/update-spending?month=${monthYear.split('-')[1]}&year=${monthYear.split('-')[0]}`} 
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all border border-indigo-100"
+              >
+                <Receipt className="w-4 h-4" /> 
+                Track Actuals
               </Link>
             </div>
+
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
