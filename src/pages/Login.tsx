@@ -17,35 +17,77 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setError("");
+  //   setLoading(true);
+
+  //   try {
+  //     // Keep your logic exactly as it was
+  //     await new Promise((resolve) => setTimeout(resolve, 2000));
+  //     const response = await api.post("/auth/login", { email, password });
+  //     const { user, accessToken, refreshToken } = response.data;
+
+  //     localStorage.setItem("accessToken", accessToken);
+  //     localStorage.setItem("refreshToken", refreshToken);
+  //     setUser(user);
+
+  //     toast.success("Logged in successfully! 🎉");
+  //     navigate("/dashboard");
+  //   } catch (err: any) {
+  //     const message = err.response?.data?.message || "Login failed!";
+  //     setError(message);
+  //     toast.error(message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    try {
-      // Keep your logic exactly as it was
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const response = await api.post("/auth/login", { email, password });
-      const { user, accessToken, refreshToken } = response.data;
+  try {
+    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    
+    const response = await api.post("/auth/login", { email, password });
+    
+    const { user, accessToken, refreshToken } = response.data;
 
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
-      setUser(user);
+    localStorage.setItem("accessToken", accessToken);
+    localStorage.setItem("refreshToken", refreshToken);
+    setUser(user);
 
-      toast.success("Logged in successfully! 🎉");
-      navigate("/dashboard");
-    } catch (err: any) {
-      const message = err.response?.data?.message || "Login failed!";
-      setError(message);
-      toast.error(message);
-    } finally {
-      setLoading(false);
+    toast.success("Logged in successfully! 🎉");
+    navigate("/dashboard");
+    
+  } catch (err: any) {
+    const status = err.response?.status;
+    const message = err.response?.data?.message || "Login failed!";
+
+    if (status === 404) {
+      toast.error("Account not found. Redirecting to sign up... 📝");
+      
+      
+      setTimeout(() => {
+        navigate("/register", { state: { email } });
+      }, 2000);
+      
+      return; 
     }
-  };
+
+    toast.error(message);
+    
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] px-4 relative overflow-hidden">
-      {/* Decorative Background Elements */}
+     
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50 rounded-full blur-3xl opacity-50" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-50 rounded-full blur-3xl opacity-50" />
 
