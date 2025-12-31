@@ -15,7 +15,7 @@ const CompleteRegistration = () => {
     mobile: "",
     country: "Sri Lanka",
     picture: "",
-    currency: "USD",
+    currency: "LKR",
     openingBalance: 0,
     accountType: "PERSONAL",
   });
