@@ -374,7 +374,13 @@ const SettingsPage = () => {
     setLoading(true);
     try {
       await api.put('/auth/settings', formData);
+  
       showToast("Profile settings updated successfully! ✨", "success");
+
+      setTimeout(() => {
+        window.location.href = '/dashboard'; 
+      }, 1500);
+
     } catch (err: any) {
       console.error("Update error:", err);
       if (err.response?.status === 413) {
@@ -382,8 +388,7 @@ const SettingsPage = () => {
       } else {
         showToast("Update failed. Please try again later.", "error");
       }
-    } finally {
-      setLoading(false);
+      setLoading(false); // Only stop loading if there is an error
     }
   };
 
