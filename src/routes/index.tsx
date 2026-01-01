@@ -8,6 +8,7 @@ import CompleteRegistration  from "../pages/CompleteRegistration"
 import ViewMonthlyBudget from "../pages/ViewMonthlyBudget"
 import UpdateSpendingPage from "../pages/UpdateSpendingPage"
 import SettingsPage from "../pages/SettingsPage"
+import AnalyticsPage from "../pages/AnalyticsPage"
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -68,6 +69,15 @@ const AppRoutes = () => {
                         </ProtectedRoute>
                     } 
                 />
+
+                <Route 
+                    path="/analytics" element={
+                        <ProtectedRoute>
+                            <AnalyticsPage  />
+                        </ProtectedRoute>
+                    } 
+                />
+
 
 
 
