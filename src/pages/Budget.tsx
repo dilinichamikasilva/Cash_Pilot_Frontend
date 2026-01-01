@@ -3,7 +3,7 @@ import { useAuth } from "../context/authContext";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Plus, Trash2, Wallet, Calendar, CheckCircle2, 
-  ArrowRight, PieChart, AlertCircle, Receipt, Loader2, Sparkles
+  ArrowRight, PieChart, AlertCircle, Receipt, Loader2, Sparkles, Edit3, X, Check
 } from "lucide-react";
 import api from "../service/api";
 import AllocationModal from "../components/AllocationModal";
@@ -30,8 +30,13 @@ export default function BudgetPage() {
   const [tempAllocations, setTempAllocations] = useState<TempAlloc[]>([]);
   const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
-  const [isAiLoading, setIsAiLoading] = useState(false); // AI Loading State
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const [isEditingExisting, setIsEditingExisting] = useState(false);
+
+  // --- NEW STATE FOR ONE-BY-ONE EDITING ---
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editBudget, setEditBudget] = useState<number>(0);
 
   // --- Toast Logic ---
   const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
@@ -61,10 +66,8 @@ export default function BudgetPage() {
     ), { duration: 4000 });
   };
 
-  // 1. Fetch Account and Suggested Categories
   useEffect(() => {
     if (!user?.accountId) return;
-    
     api.get(`/auth/me`) 
       .then((res) => {
         const account = res.data.account;
@@ -78,7 +81,6 @@ export default function BudgetPage() {
       .catch(() => setSuggestedCategories([]));
   }, [user]);
 
-  // 2. FETCH EXISTING BUDGET FOR SELECTED MONTH
   useEffect(() => {
     if (!user?.accountId || !monthYear) return;
     const [year, month] = monthYear.split("-");
@@ -106,35 +108,25 @@ export default function BudgetPage() {
       });
   }, [monthYear, user, openingBalance]);
 
-  // --- AI Suggestion Logic ---
   const handleAiSuggest = async () => {
     if (!income || Number(income) <= 0) {
       showToast("Please enter a monthly income first.", "warning");
       return;
     }
-
     setIsAiLoading(true);
     try {
-      
       const response = await api.get(`/budget/ai-suggestions`, {
-        params: {
-          income: Number(income),
-          currency: currency
-        }
+        params: { income: Number(income), currency: currency }
       });
-
       const suggestions = response.data.suggestions;
-
       const formattedSuggestions = suggestions.map((s: any) => ({
         id: Math.random().toString(36).substr(2, 9),
         name: s.name,
         budget: s.budget
       }));
-
       setTempAllocations(formattedSuggestions);
       showToast(`AI suggested a balanced ${currency} budget!`, "success");
     } catch (err) {
-      console.error("AI Error:", err);
       showToast("AI service is currently unavailable.", "error");
     } finally {
       setIsAiLoading(false);
@@ -146,16 +138,9 @@ export default function BudgetPage() {
     return openingBalance + currentIncome;
   }, [openingBalance, income]);
 
-  const totalAllocated = useMemo(
-    () => tempAllocations.reduce((s, a) => s + a.budget, 0),
-    [tempAllocations]
-  );
-
+  const totalAllocated = useMemo(() => tempAllocations.reduce((s, a) => s + a.budget, 0), [tempAllocations]);
   const remaining = totalPool - totalAllocated;
-  
-  const percentageAllocated = totalPool > 0 
-    ? Math.min((totalAllocated / totalPool) * 100, 100) 
-    : 0;
+  const percentageAllocated = totalPool > 0 ? Math.min((totalAllocated / totalPool) * 100, 100) : 0;
 
   const handleAddTemp = (name: string, budget: number) => {
     const exists = tempAllocations.find(cat => cat.name.toLowerCase() === name.toLowerCase());
@@ -167,18 +152,29 @@ export default function BudgetPage() {
     setTempAllocations((s) => [...s, { id, name, budget }]);
   };
 
-  const handleRemoveTemp = (id: string) =>
-    setTempAllocations((s) => s.filter((x) => x.id !== id));
+  const handleRemoveTemp = (id: string) => setTempAllocations((s) => s.filter((x) => x.id !== id));
+
+  // --- NEW UPDATE LOGIC ---
+  const startEditing = (item: TempAlloc) => {
+    setEditingId(item.id);
+    setEditName(item.name);
+    setEditBudget(item.budget);
+  };
+
+  const saveEdit = () => {
+    setTempAllocations(prev => prev.map(item => 
+      item.id === editingId ? { ...item, name: editName, budget: Number(editBudget) } : item
+    ));
+    setEditingId(null);
+  };
 
   const handleSubmit = async () => {
     if (!user?.accountId) return;
     const [year, month] = monthYear.split("-");
-    
     if (totalPool <= 0) {
       showToast(`Please enter income.`, "warning");
       return;
     }
-    
     if (remaining < 0) {
       showToast("Allocations exceed available funds.", "error");
       return;
@@ -220,21 +216,12 @@ export default function BudgetPage() {
 
             <div className="flex gap-3">
               {isEditingExisting && (
-                <Link 
-                  to={`/view-monthly-budget?month=${parseInt(monthYear.split('-')[1])}&year=${monthYear.split('-')[0]}`} 
-                  className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all border border-slate-200 shadow-sm"
-                >
-                  <PieChart className="w-4 h-4 text-indigo-500" /> 
-                  View Summary
+                <Link to={`/view-monthly-budget?month=${parseInt(monthYear.split('-')[1])}&year=${monthYear.split('-')[0]}`} className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 border border-slate-200 shadow-sm">
+                  <PieChart className="w-4 h-4 text-indigo-500" /> View Summary
                 </Link>
               )}
-
-              <Link 
-                to={`/update-spending?month=${monthYear.split('-')[1]}&year=${monthYear.split('-')[0]}`} 
-                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all border border-indigo-100"
-              >
-                <Receipt className="w-4 h-4" /> 
-                Track Actuals
+              <Link to={`/update-spending?month=${monthYear.split('-')[1]}&year=${monthYear.split('-')[0]}`} className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 border border-indigo-100">
+                <Receipt className="w-4 h-4" /> Track Actuals
               </Link>
             </div>
           </div>
@@ -245,39 +232,21 @@ export default function BudgetPage() {
                 <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-indigo-600" /> Setup Month
                 </h3>
-                
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Target Month</label>
                     <input type="month" value={monthYear} onChange={(e) => setMonthYear(e.target.value)} className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 transition-all" />
                   </div>
-
                   <div>
                     <div className="flex justify-between items-end mb-2 ml-1">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
-                        Monthly Income ({currency})
-                      </label>
-                      <button 
-                        onClick={handleAiSuggest}
-                        disabled={isAiLoading || !income}
-                        className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 disabled:text-slate-300 transition-colors group"
-                      >
-                        {isAiLoading ? (
-                          <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />
-                        ) : (
-                          <><Sparkles className="w-3 h-3 group-hover:rotate-12 transition-transform" /> Suggest with AI</>
-                        )}
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Income ({currency})</label>
+                      <button onClick={handleAiSuggest} disabled={isAiLoading || !income} className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 disabled:text-slate-300 group">
+                        {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin text-indigo-600" /> : <><Sparkles className="w-3 h-3 group-hover:rotate-12 transition-transform" /> Suggest with AI</>}
                       </button>
                     </div>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">{currency}</span>
-                      <input
-                        type="number"
-                        placeholder="0.00"
-                        value={income}
-                        onChange={(e) => setIncome(e.target.value === "" ? "" : Number(e.target.value))}
-                        className="w-full bg-slate-50 border-none rounded-xl pl-14 pr-4 py-3 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 transition-all placeholder:text-slate-300"
-                      />
+                      <input type="number" placeholder="0.00" value={income} onChange={(e) => setIncome(e.target.value === "" ? "" : Number(e.target.value))} className="w-full bg-slate-50 border-none rounded-xl pl-14 pr-4 py-3 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500 placeholder:text-slate-300" />
                     </div>
                   </div>
                 </div>
@@ -285,17 +254,11 @@ export default function BudgetPage() {
 
               <section className="bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden">
                 <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-6">
-                    <div>
-                      <p className="text-slate-400 text-sm font-medium">Remaining to Allocate</p>
-                      <h2 className={`text-4xl font-black mt-1 ${remaining < 0 ? 'text-rose-400' : 'text-white'}`}>
-                        {remaining.toLocaleString()} <span className="text-lg font-normal opacity-50">{currency}</span>
-                      </h2>
-                    </div>
-                    <Wallet className="w-8 h-8 text-indigo-400 opacity-80" />
-                  </div>
-
-                  <div className="flex items-center gap-3 mb-8 bg-slate-800/50 p-3 rounded-2xl border border-white/5">
+                  <p className="text-slate-400 text-sm font-medium">Remaining to Allocate</p>
+                  <h2 className={`text-4xl font-black mt-1 ${remaining < 0 ? 'text-rose-400' : 'text-white'}`}>
+                    {remaining.toLocaleString()} <span className="text-lg font-normal opacity-50">{currency}</span>
+                  </h2>
+                  <div className="flex items-center gap-3 mt-6 mb-8 bg-slate-800/50 p-3 rounded-2xl border border-white/5">
                     <div className="flex-1 text-center">
                         <p className="text-[10px] font-black text-slate-500 uppercase">Opening</p>
                         <p className="text-sm font-bold text-indigo-300">{openingBalance.toLocaleString()}</p>
@@ -306,19 +269,13 @@ export default function BudgetPage() {
                         <p className="text-sm font-bold text-emerald-400">{(Number(income) || 0).toLocaleString()}</p>
                     </div>
                   </div>
-
                   <div className="space-y-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Progress</span>
                       <span className="font-bold">{totalAllocated.toLocaleString()} {currency} spent</span>
                     </div>
-
                     <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${percentageAllocated}%` }}
-                        className={`h-full rounded-full transition-colors duration-500 ${remaining < 0 ? 'bg-red-500' : 'bg-indigo-500'}`}
-                      />
+                      <motion.div animate={{ width: `${percentageAllocated}%` }} className={`h-full rounded-full transition-colors duration-500 ${remaining < 0 ? 'bg-red-500' : 'bg-indigo-500'}`} />
                     </div>
                   </div>
                 </div>
@@ -329,7 +286,7 @@ export default function BudgetPage() {
               <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm flex flex-col h-full min-h-[500px]">
                 <div className="p-6 border-b border-slate-50 flex justify-between items-center">
                   <h3 className="text-lg font-bold text-slate-800">Allocations</h3>
-                  <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-md active:scale-95">
+                  <button onClick={() => setShowModal(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 shadow-md active:scale-95 transition-all">
                     <Plus className="w-4 h-4" /> Add Category
                   </button>
                 </div>
@@ -339,27 +296,44 @@ export default function BudgetPage() {
                     {tempAllocations.length > 0 ? (
                       <div className="space-y-3">
                         {tempAllocations.map((t) => (
-                          <motion.div key={t.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-indigo-100 transition-all group">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                                <CheckCircle2 className="w-5 h-5 text-indigo-500" />
+                          <motion.div key={t.id} layout initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl border border-transparent hover:border-indigo-100 transition-all group">
+                            
+                            {editingId === t.id ? (
+                              /* --- EDITING MODE --- */
+                              <div className="flex flex-1 items-center gap-2 animate-in fade-in duration-300">
+                                <input value={editName} onChange={(e) => setEditName(e.target.value)} className="flex-1 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold" />
+                                <input type="number" value={editBudget} onChange={(e) => setEditBudget(Number(e.target.value))} className="w-24 bg-white border border-slate-200 rounded-lg px-2 py-1 text-sm font-bold" />
+                                <button onClick={saveEdit} className="p-2 bg-emerald-500 text-white rounded-lg"><Check className="w-4 h-4"/></button>
+                                <button onClick={() => setEditingId(null)} className="p-2 bg-slate-200 text-slate-600 rounded-lg"><X className="w-4 h-4"/></button>
                               </div>
-                              <div>
-                                <div className="font-bold text-slate-800">{t.name}</div>
-                                <div className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Plan: {t.budget.toLocaleString()} {currency}</div>
-                              </div>
-                            </div>
-                            <button className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" onClick={() => handleRemoveTemp(t.id)}>
-                              <Trash2 className="w-5 h-5" />
-                            </button>
+                            ) : (
+                              /* --- VIEW MODE --- */
+                              <>
+                                <div className="flex items-center gap-4">
+                                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm text-indigo-500">
+                                    <CheckCircle2 className="w-5 h-5" />
+                                  </div>
+                                  <div>
+                                    <div className="font-bold text-slate-800">{t.name}</div>
+                                    <div className="text-xs font-bold text-slate-400 uppercase tracking-tighter">Plan: {t.budget.toLocaleString()} {currency}</div>
+                                  </div>
+                                </div>
+                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg" onClick={() => startEditing(t)}>
+                                    <Edit3 className="w-4 h-4" />
+                                  </button>
+                                  <button className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg" onClick={() => handleRemoveTemp(t.id)}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </>
+                            )}
                           </motion.div>
                         ))}
                       </div>
                     ) : (
                       <div className="h-full flex flex-col items-center justify-center text-center py-20">
-                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                          <Plus className="w-8 h-8 text-slate-300" />
-                        </div>
+                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4"><Plus className="w-8 h-8 text-slate-300" /></div>
                         <p className="text-slate-400 font-medium max-w-[200px]">No categories planned for this month yet.</p>
                       </div>
                     )}
@@ -367,13 +341,8 @@ export default function BudgetPage() {
                 </div>
 
                 <div className="p-6 bg-slate-50/50 rounded-b-[2rem] border-t border-slate-100">
-                  <button
-                    onClick={handleSubmit}
-                    disabled={tempAllocations.length === 0 || isSaving}
-                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-slate-800 disabled:bg-slate-300 disabled:shadow-none transition-all flex items-center justify-center gap-2 group"
-                  >
-                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : 
-                    <>{isEditingExisting ? 'Update Monthly Budget' : 'Lock Monthly Budget'} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
+                  <button onClick={handleSubmit} disabled={tempAllocations.length === 0 || isSaving} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg hover:bg-slate-800 disabled:bg-slate-300 flex items-center justify-center gap-2 group transition-all">
+                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isEditingExisting ? 'Update Monthly Budget' : 'Lock Monthly Budget'} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
                   </button>
                 </div>
               </div>
@@ -383,14 +352,7 @@ export default function BudgetPage() {
       </motion.div>
 
       {showModal && (
-        <AllocationModal
-          onClose={() => setShowModal(false)}
-          onAdd={handleAddTemp}
-          suggestions={suggestedCategories}
-          currentRemaining={remaining}
-          accountId={user?.accountId}
-          currency={currency} 
-        />
+        <AllocationModal onClose={() => setShowModal(false)} onAdd={handleAddTemp} suggestions={suggestedCategories} currentRemaining={remaining} accountId={user?.accountId} currency={currency} />
       )}
     </DashboardLayout>
   );
