@@ -3,7 +3,7 @@ import { useAuth } from "../context/authContext";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   Plus, Trash2, Wallet, Calendar, CheckCircle2, 
-  ArrowRight, PieChart, AlertCircle, Receipt, Loader2, Edit3
+  ArrowRight, PieChart, AlertCircle, Receipt, Loader2, Sparkles
 } from "lucide-react";
 import api from "../service/api";
 import AllocationModal from "../components/AllocationModal";
@@ -30,35 +30,8 @@ export default function BudgetPage() {
   const [tempAllocations, setTempAllocations] = useState<TempAlloc[]>([]);
   const [suggestedCategories, setSuggestedCategories] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false); // AI Loading State
   const [isEditingExisting, setIsEditingExisting] = useState(false);
-
-  // // --- Toast Logic ---
-  // const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
-  //   toast.custom((t) => (
-  //     <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 ${
-  //       type === 'success' ? 'border-emerald-500' : type === 'error' ? 'border-rose-500' : 'border-amber-500'
-  //     }`}>
-  //       <div className="flex-1 w-0 p-4">
-  //         <div className="flex items-start">
-  //           <div className="flex-shrink-0 pt-0.5">
-  //             {type === 'success' && <CheckCircle2 className="h-10 w-10 text-emerald-500" />}
-  //             {type === 'error' && <AlertCircle className="h-10 w-10 text-rose-500" />}
-  //             {type === 'warning' && <AlertCircle className="h-10 w-10 text-amber-500" />}
-  //           </div>
-  //           <div className="ml-3 flex-1">
-  //             <p className="text-sm font-bold text-slate-900">
-  //               {type === 'success' ? 'Budget Updated' : type === 'error' ? 'Budget Error' : 'Attention Required'}
-  //             </p>
-  //             <p className="mt-1 text-sm text-slate-500 font-medium">{message}</p>
-  //           </div>
-  //         </div>
-  //       </div>
-  //       <div className="flex border-l border-slate-100">
-  //         <button onClick={() => toast.dismiss(t.id)} className="w-full p-4 text-sm font-bold text-slate-400 hover:text-slate-600 focus:outline-none">Close</button>
-  //       </div>
-  //     </div>
-  //   ), { duration: 4000 });
-  // };
 
   // --- Toast Logic ---
   const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
@@ -74,9 +47,8 @@ export default function BudgetPage() {
               {type === 'warning' && <AlertCircle className="h-10 w-10 text-amber-500" />}
             </div>
             <div className="ml-3 flex-1">
-              {/* UPDATED TITLE LOGIC HERE */}
               <p className="text-sm font-bold text-slate-900">
-                {type === 'success' ? 'Budget Updated' : type === 'error' ? 'Budget Error' : 'New Month Setup'}
+                {type === 'success' ? 'Success' : type === 'error' ? 'Budget Error' : 'Attention Required'}
               </p>
               <p className="mt-1 text-sm text-slate-500 font-medium">{message}</p>
             </div>
@@ -106,73 +78,68 @@ export default function BudgetPage() {
       .catch(() => setSuggestedCategories([]));
   }, [user]);
 
-  // // 2. FETCH EXISTING BUDGET FOR SELECTED MONTH
-  // useEffect(() => {
-  //   if (!user?.accountId || !monthYear) return;
-  //   const [year, month] = monthYear.split("-");
-
-  //   api.get(`/budget/view-monthly-allocations?accountId=${user.accountId}&month=${month}&year=${year}`)
-  //     .then((res) => {
-  //       if (res.data) {
-  //         // If budget exists, load it into state
-  //         setIncome(res.data.allocation.totalAllocated - openingBalance); // Inverse calculation if needed
-  //         const existingCats = res.data.categories.map((c: any) => ({
-  //           id: c.id,
-  //           name: c.name,
-  //           budget: c.budget
-  //         }));
-  //         setTempAllocations(existingCats);
-  //         setIsEditingExisting(true);
-  //       } else {
-  //         setTempAllocations([]);
-  //         setIncome("");
-  //         setIsEditingExisting(false);
-  //       }
-  //     })
-  //     .catch(() => {
-  //       // If 404 or error, assume new budget
-  //       setTempAllocations([]);
-  //       setIncome("");
-  //       setIsEditingExisting(false);
-  //     });
-  // }, [monthYear, user, openingBalance]);
   // 2. FETCH EXISTING BUDGET FOR SELECTED MONTH
-
   useEffect(() => {
-  if (!user?.accountId || !monthYear) return;
-  const [year, month] = monthYear.split("-");
+    if (!user?.accountId || !monthYear) return;
+    const [year, month] = monthYear.split("-");
 
-  api.get(`/budget/view-monthly-allocations?accountId=${user.accountId}&month=${month}&year=${year}`)
-    .then((res) => {
-      // If we get data, set it
-      if (res.data) {
-        setIncome(res.data.allocation.totalAllocated - openingBalance); 
-        const existingCats = res.data.categories.map((c: any) => ({
-          id: c.id,
-          name: c.name,
-          budget: c.budget
-        }));
-        setTempAllocations(existingCats);
-        setIsEditingExisting(true);
-      }
-    })
-    .catch((err) => {
-      // RESET everything for the new month
-      setTempAllocations([]);
-      setIncome("");
-      setIsEditingExisting(false);
+    api.get(`/budget/view-monthly-allocations?accountId=${user.accountId}&month=${month}&year=${year}`)
+      .then((res) => {
+        if (res.data) {
+          setIncome(res.data.allocation.totalAllocated - openingBalance); 
+          const existingCats = res.data.categories.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            budget: c.budget
+          }));
+          setTempAllocations(existingCats);
+          setIsEditingExisting(true);
+        }
+      })
+      .catch((err) => {
+        setTempAllocations([]);
+        setIncome("");
+        setIsEditingExisting(false);
+        if (err.response?.status !== 404) {
+          showToast("System Error: Failed to sync data.", "error");
+        }
+      });
+  }, [monthYear, user, openingBalance]);
 
-      // CHECK IF 404: If it is, DO NOT show an error.
-      if (err.response?.status === 404) {
-        console.log("New month detected, no existing budget found.");
-        // We do NOT call showToast here with "error" type
-        // Optional: showToast("Plan your budget for this month!", "warning");
-      } else {
-        // Only show "System Error" for 500s or network failures
-        showToast("System Error: Failed to sync data.", "error");
-      }
-    });
-}, [monthYear, user, openingBalance]);
+  // --- AI Suggestion Logic ---
+  const handleAiSuggest = async () => {
+    if (!income || Number(income) <= 0) {
+      showToast("Please enter a monthly income first.", "warning");
+      return;
+    }
+
+    setIsAiLoading(true);
+    try {
+      
+      const response = await api.get(`/budget/ai-suggestions`, {
+        params: {
+          income: Number(income),
+          currency: currency
+        }
+      });
+
+      const suggestions = response.data.suggestions;
+
+      const formattedSuggestions = suggestions.map((s: any) => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: s.name,
+        budget: s.budget
+      }));
+
+      setTempAllocations(formattedSuggestions);
+      showToast(`AI suggested a balanced ${currency} budget!`, "success");
+    } catch (err) {
+      console.error("AI Error:", err);
+      showToast("AI service is currently unavailable.", "error");
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   const totalPool = useMemo(() => {
     const currentIncome = typeof income === "number" ? income : 0;
@@ -191,7 +158,6 @@ export default function BudgetPage() {
     : 0;
 
   const handleAddTemp = (name: string, budget: number) => {
-    // Check if category already exists in temp list
     const exists = tempAllocations.find(cat => cat.name.toLowerCase() === name.toLowerCase());
     if (exists) {
       showToast(`${name} is already in your list.`, "warning");
@@ -229,8 +195,6 @@ export default function BudgetPage() {
     try {
       await api.post("/budget/monthly-allocations", payload);
       showToast(isEditingExisting ? "Budget updated successfully!" : "Budget locked in! 🎉", "success");
-      
-      // Navigate after a small delay
       setTimeout(() => navigate(`/view-monthly-budget?month=${month}&year=${year}`), 1500);
     } catch (err: any) {
       showToast(err?.response?.data?.message || "Failed to save.", "error");
@@ -255,10 +219,8 @@ export default function BudgetPage() {
             </div>
 
             <div className="flex gap-3">
-              {/* VIEW SUMMARY BUTTON: Only show if an allocation already exists */}
               {isEditingExisting && (
                 <Link 
-                  // This maps the YYYY-MM state to ?month=X&year=Y
                   to={`/view-monthly-budget?month=${parseInt(monthYear.split('-')[1])}&year=${monthYear.split('-')[0]}`} 
                   className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all border border-slate-200 shadow-sm"
                 >
@@ -267,7 +229,6 @@ export default function BudgetPage() {
                 </Link>
               )}
 
-              {/* TRACK ACTUALS BUTTON */}
               <Link 
                 to={`/update-spending?month=${monthYear.split('-')[1]}&year=${monthYear.split('-')[0]}`} 
                 className="flex items-center gap-2 px-5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-all border border-indigo-100"
@@ -276,11 +237,9 @@ export default function BudgetPage() {
                 Track Actuals
               </Link>
             </div>
-
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
             <div className="lg:col-span-5 space-y-6">
               <section className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
@@ -294,7 +253,22 @@ export default function BudgetPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 ml-1">Monthly Income ({currency})</label>
+                    <div className="flex justify-between items-end mb-2 ml-1">
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Monthly Income ({currency})
+                      </label>
+                      <button 
+                        onClick={handleAiSuggest}
+                        disabled={isAiLoading || !income}
+                        className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-700 disabled:text-slate-300 transition-colors group"
+                      >
+                        {isAiLoading ? (
+                          <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />
+                        ) : (
+                          <><Sparkles className="w-3 h-3 group-hover:rotate-12 transition-transform" /> Suggest with AI</>
+                        )}
+                      </button>
+                    </div>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">{currency}</span>
                       <input
@@ -309,7 +283,6 @@ export default function BudgetPage() {
                 </div>
               </section>
 
-              {/* BALANCE CARD */}
               <section className="bg-slate-900 text-white p-8 rounded-[2rem] shadow-xl relative overflow-hidden">
                 <div className="relative z-10">
                   <div className="flex justify-between items-start mb-6">
