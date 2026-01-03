@@ -57,40 +57,6 @@ export default function Dashboard() {
     ), { duration: 4000 });
   };
 
-//   useEffect(() => {
-//   const fetchDashboardData = async () => {
-//     if (!user?.accountId) return;
-
-//     try {
-//       const now = new Date();
-      
-//       const [budgetData, accountRes] = await Promise.all([
-//         getMonthlyAllocation(user.accountId, now.getMonth() + 1, now.getFullYear()),
-//         api.get(`/account/${user.accountId}`) 
-//       ]);
-
-//       const userCurrency = accountRes.data?.account?.currency || "Rs.";
-
-//       const spent = budgetData.categories.reduce((sum: number, c: CategoryItem) => sum + c.spent, 0);
-      
-//       setStats({
-//         totalBudget: budgetData.allocation.totalAllocated,
-//         totalSpent: spent,
-//         remaining: budgetData.totals.remaining,
-//         categories: budgetData.categories,
-//         currency: userCurrency 
-//       });
-//     } catch (err) {
-//       console.error("Dashboard fetch error:", err);
-//       showToast("Failed to sync your latest financial data.", "error");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   fetchDashboardData();
-// }, [user?.accountId]); 
-
 useEffect(() => {
   const fetchDashboardData = async () => {
     if (!user?.accountId) return;
@@ -182,18 +148,42 @@ useEffect(() => {
           </div>
         </header>
 
+        {/* Updated Grid with h-full items */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-          <motion.div variants={itemVariants}>
-            <StatCard title="Monthly Income" value={`${stats.currency} ${stats.totalBudget.toLocaleString()}`} gradient="from-slate-900 to-slate-800" />
+          <motion.div variants={itemVariants} className="flex">
+            <StatCard 
+              title="Monthly Income" 
+              value={`${stats.currency} ${stats.totalBudget.toLocaleString()}`} 
+              gradient="from-slate-900 to-slate-800" 
+              className="w-full h-full" // Ensure card stretches
+            />
           </motion.div>
-          <motion.div variants={itemVariants}>
-            <StatCard title="Total Spent" value={`${stats.currency} ${stats.totalSpent.toLocaleString()}`} gradient="from-rose-500 to-orange-500" />
+
+          <motion.div variants={itemVariants} className="flex">
+            <StatCard 
+              title="Total Spent" 
+              value={`${stats.currency} ${stats.totalSpent.toLocaleString()}`} 
+              gradient="from-rose-500 to-orange-500" 
+              className="w-full h-full"
+            />
           </motion.div>
-          <motion.div variants={itemVariants}>
-            <StatCard title="Available" value={`${stats.currency} ${stats.remaining.toLocaleString()}`} gradient="from-indigo-600 to-purple-600" />
+
+          <motion.div variants={itemVariants} className="flex">
+            <StatCard 
+              title="Available" 
+              value={`${stats.currency} ${stats.remaining.toLocaleString()}`} 
+              gradient="from-indigo-600 to-purple-600" 
+              className="w-full h-full"
+            />
           </motion.div>
-          <motion.div variants={itemVariants}>
-            <StatCard title="Savings Rate" value={`${stats.totalBudget > 0 ? Math.round((stats.remaining / stats.totalBudget) * 100) : 0}%`} gradient="from-emerald-500 to-teal-500" />
+
+          <motion.div variants={itemVariants} className="flex">
+            <StatCard 
+              title="Savings Rate" 
+              value={`${stats.totalBudget > 0 ? Math.max(0, Math.round((stats.remaining / stats.totalBudget) * 100)) : 0}%`} 
+              gradient="from-emerald-500 to-teal-500" 
+              className="w-full h-full"
+            />
           </motion.div>
         </div>
 
