@@ -132,7 +132,7 @@ export default function Topbar() {
             <Search size={18} className="text-slate-400 group-focus-within:text-indigo-500" />
             <input 
               type="text" 
-              placeholder="Search categories..." 
+              placeholder="Search Categories..." 
               className="bg-transparent border-none outline-none text-sm w-full font-medium"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
