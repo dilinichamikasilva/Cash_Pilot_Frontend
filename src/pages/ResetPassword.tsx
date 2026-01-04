@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import api from "../service/api";
 import toast from "react-hot-toast";
-import { Lock, Loader2, CheckCircle2, ArrowRight } from "lucide-react";
+import { Lock, Loader2, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const token = searchParams.get("token"); // Grabs the ?token= from the email link
+  const token = searchParams.get("token"); 
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,7 +27,7 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
-      // Calls the second backend function you provided
+
       await api.post("/auth/reset-password", { token, password });
       toast.success("Password updated successfully!");
       navigate("/login");
