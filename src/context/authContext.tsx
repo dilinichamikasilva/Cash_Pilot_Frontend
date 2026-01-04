@@ -31,21 +31,21 @@ export const AuthProvider = ({ children }: { children: any }) => {
     try {
       const refreshToken = localStorage.getItem("refreshToken");
       
-      // 1. Invalidate token on server
+      //  Invalidate token on server
       if (refreshToken) {
         await api.post("/auth/logout", { refreshToken });
       }
     } catch (err) {
       console.error("Logout error:", err);
     } finally {
-      // 2. Clear tokens from storage
+      //  Clear tokens from storage
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
-      // 3. Reset state
+      // Reset state
       setUser(null);
 
-      // 4. Force a clean redirect to login (clears memory)
+      // Force a clean redirect to login (clears memory)
       window.location.href = "/login";
     }
   };
@@ -60,7 +60,6 @@ export const AuthProvider = ({ children }: { children: any }) => {
 
     try {
       const decoded: any = jwtDecode(token);
-      // Map decoded JWT fields to your User interface if they differ
       setUser(decoded); 
     } catch {
       localStorage.removeItem("accessToken");

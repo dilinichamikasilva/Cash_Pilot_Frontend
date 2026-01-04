@@ -110,14 +110,13 @@ const HomePage: React.FC = () => {
       <main className="pt-20">
         {/* HERO SECTION */}
         <section className="relative overflow-hidden py-20 lg:py-32">
-        {/* Background Image with Gradient Overlay */}
         <div className="absolute inset-0 -z-10">
             <img 
             src={heroBg} 
             alt="Background" 
             className="w-full h-full object-cover opacity-[0.07] scale-110" 
             />
-            {/* This gradient ensures the image fades out smoothly into your site background */}
+            
             <div className="absolute inset-0 bg-gradient-to-b from-[#FDFDFD] via-transparent to-[#FDFDFD]" />
         </div>
 

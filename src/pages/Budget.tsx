@@ -67,7 +67,7 @@ export default function BudgetPage() {
     ), { duration: 4000 });
   };
 
-  // 1. Fetch User Settings & Global Categories
+  //  Fetch User Settings & Global Categories
   useEffect(() => {
     if (!user?.accountId) return;
     api.get(`/auth/me`) 
@@ -79,14 +79,14 @@ export default function BudgetPage() {
       .catch(() => setSuggestedCategories([]));
   }, [user]);
 
-  // 2. Core Logic: Handle Monthly Sync & Opening Balance Check
+  //  Handle Monthly Sync & Opening Balance Check
   useEffect(() => {
     if (!user?.accountId || !monthYear) return;
     const [year, month] = monthYear.split("-");
 
     const syncBudgetData = async () => {
       try {
-        // Check if this month is chronologically the user's first month
+       
         const firstMonthRes = await api.get(`/budget/is-first-month?accountId=${user.accountId}&month=${month}&year=${year}`);
         const isFirst = firstMonthRes.data.isFirstMonth;
         setIsFirstMonth(isFirst);
@@ -96,7 +96,7 @@ export default function BudgetPage() {
           const authRes = await api.get(`/auth/me`);
           setOpeningBalance(authRes.data.account?.openingBalance || 0);
         } else {
-          setOpeningBalance(0); // Subsequent months rely on income + carry-over savings
+          setOpeningBalance(0); /
         }
 
         // Fetch existing budget if it exists

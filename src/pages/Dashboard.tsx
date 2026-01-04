@@ -15,7 +15,7 @@ interface DashboardStats {
   remaining: number;
   categories: CategoryItem[]; 
   currency: string;
-  trends: any[]; // Added to store actual chart data
+  trends: any[]; 
 }
 
 export default function Dashboard() {
@@ -27,12 +27,12 @@ export default function Dashboard() {
     remaining: 0,
     categories: [],
     currency: "Rs.",
-    trends: [] // Initialize empty trends
+    trends: [] 
   });
   
   const [loading, setLoading] = useState(true);
 
-  // Toast helper (kept from your original code)
+  // Toast helper 
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     toast.custom((t) => (
       <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 ${
@@ -67,10 +67,11 @@ export default function Dashboard() {
       try {
         const now = new Date();
         
-        // 1. Fetch Budget, Account, AND Analytics Trends simultaneously
+        // Fetch Budget, Account, AND Analytics Trends simultaneously
         const [budgetData, accountRes, analyticsRes] = await Promise.all([
           getMonthlyAllocation(user.accountId, now.getMonth() + 1, now.getFullYear()),
           api.get(`/account/${user.accountId}`),
+
           // Fetching 6 months of trends for the ChartBox
           api.get('/analytics/summary', { params: { months: 6, accountId: user.accountId } })
         ]);
@@ -84,7 +85,7 @@ export default function Dashboard() {
           remaining: budgetData.totals.remaining,
           categories: budgetData.categories,
           currency: userCurrency,
-          trends: analyticsRes.data.trends // Actual spending trends from DB
+          trends: analyticsRes.data.trends /
         });
       } catch (err: any) {
         console.error("Dashboard fetch error:", err);
@@ -152,7 +153,6 @@ export default function Dashboard() {
         {/* CHART & CATEGORIES SECTION */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
           <motion.div variants={itemVariants} className="lg:col-span-2">
-            {/* PASSING REAL DATA HERE */}
             <ChartBox title="Spending Trends" data={stats.trends} />
           </motion.div>
           

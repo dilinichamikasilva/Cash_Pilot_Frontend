@@ -30,7 +30,7 @@ const ViewMonthlyBudget = () => {
   const [month, setMonth] = useState(initialMonth);
   const [year, setYear] = useState(initialYear);
   const [data, setData] = useState<any>(null);
-  const [currency, setCurrency] = useState("Rs."); // Default currency state
+  const [currency, setCurrency] = useState("Rs."); 
   const [loading, setLoading] = useState(true);
 
   // --- Premium Toast Helper ---
@@ -83,7 +83,7 @@ const fetchData = async (m: number, y: number, isInitial = false) => {
     if (res && res.allocation && res.totals) {
       setData(res);
     } else {
-      setData(null); // Triggers the "No Record Found" UI instead of crashing
+      setData(null); 
     }
     
     if (accountRes.data?.account?.currency) {

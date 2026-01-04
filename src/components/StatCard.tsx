@@ -1,6 +1,6 @@
 import React from "react";
 
-// Define the interface to fix the "Cannot find name 'StatCardProps'" error
+
 interface StatCardProps {
   title: string;
   value: string;
