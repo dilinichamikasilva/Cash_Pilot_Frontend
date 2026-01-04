@@ -10,6 +10,7 @@ import UpdateSpendingPage from "../pages/UpdateSpendingPage"
 import SettingsPage from "../pages/SettingsPage"
 import AnalyticsPage from "../pages/AnalyticsPage"
 import ResetPassword from "../pages/ResetPassword"
+import DocsPage from "../pages/DocsPage"
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -19,6 +20,7 @@ const AppRoutes = () => {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/docs" element={<DocsPage />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 
 

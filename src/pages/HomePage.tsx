@@ -276,9 +276,12 @@ const HomePage: React.FC = () => {
                       <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform relative z-10" />
                     </button>
                     
-                    <button className="px-10 py-5 text-white/70 hover:text-white font-bold transition-colors">
+                    <a 
+                      href="#features"
+                      className="px-10 py-5 text-white/70 hover:text-white font-bold transition-colors cursor-pointer"
+                    >
                       Learn More
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -298,16 +301,52 @@ const HomePage: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
-                { title: "User Guide", desc: "Master the basics of tracking and budgeting.", icon: <BookOpen className="w-6 h-6 text-orange-500" />, color: "bg-orange-50" },
-                { title: "API Reference", desc: "Connect your custom apps to our secure endpoints.", icon: <Code2 className="w-6 h-6 text-blue-500" />, color: "bg-blue-50" },
-                { title: "Help Center", desc: "Frequently asked questions and troubleshooting.", icon: <HelpCircle className="w-6 h-6 text-teal-500" />, color: "bg-teal-50" },
-                { title: "Changelog", desc: "See what's new in the latest update.", icon: <History className="w-6 h-6 text-purple-500" />, color: "bg-purple-50" }
+                { 
+                  id: "guide", 
+                  title: "User Guide", 
+                  desc: "Master the basics of tracking and budgeting.", 
+                  icon: <BookOpen className="w-6 h-6 text-orange-500" />, 
+                  color: "bg-orange-50" 
+                },
+                { 
+                  id: "api", 
+                  title: "API Reference", 
+                  desc: "Connect your custom apps to our secure endpoints.", 
+                  icon: <Code2 className="w-6 h-6 text-blue-500" />, 
+                  color: "bg-blue-50" 
+                },
+                { 
+                  id: "help", 
+                  title: "Help Center", 
+                  desc: "Frequently asked questions and troubleshooting.", 
+                  icon: <HelpCircle className="w-6 h-6 text-teal-500" />, 
+                  color: "bg-teal-50" 
+                },
+                { 
+                  id: "changelog", 
+                  title: "Changelog", 
+                  desc: "See what's new in the latest update.", 
+                  icon: <History className="w-6 h-6 text-purple-500" />, 
+                  color: "bg-purple-50" 
+                }
               ].map((item, i) => (
-                <motion.div key={i} whileHover={{ y: -5 }} className="p-8 rounded-[2rem] border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all cursor-pointer group">
-                  <div className={`w-14 h-14 ${item.color} rounded-2xl flex items-center justify-center mb-6`}>{item.icon}</div>
+                <motion.div 
+                  key={i} 
+                  whileHover={{ y: -10 }} 
+                 
+                  onClick={() => navigate(`/docs?tab=${item.id}`)}
+                  className="p-8 rounded-[2rem] border border-slate-100 bg-slate-50/50 hover:bg-white hover:shadow-2xl hover:shadow-slate-200/50 transition-all cursor-pointer group"
+                >
+                  <div className={`w-14 h-14 ${item.color} rounded-2xl flex items-center justify-center mb-6 transform group-hover:scale-110 transition-transform`}>
+                    {item.icon}
+                  </div>
                   <h3 className="text-lg font-bold text-slate-900 mb-2">{item.title}</h3>
                   <p className="text-slate-500 text-sm leading-relaxed mb-6">{item.desc}</p>
-                  <span className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">Explore Docs →</span>
+                  
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                    Explore Docs 
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </motion.div>
               ))}
             </div>
