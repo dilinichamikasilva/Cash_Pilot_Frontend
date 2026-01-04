@@ -31,7 +31,7 @@ export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   const menuItems = [
     { path: "/dashboard", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
     { path: "/budget", icon: <PiggyBank size={20} />, label: "Budget Planner" },
-    { path: "/accounts", icon: <Wallet size={20} />, label: "My Accounts" },
+    // { path: "/accounts", icon: <Wallet size={20} />, label: "My Accounts" },
     { path: "/analytics", icon: <BarChart3 size={20} />, label: "Analytics" },
     { path: "/settings", icon: <Settings size={20} />, label: "Settings" },
   ];
