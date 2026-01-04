@@ -17,15 +17,15 @@ export default function BudgetPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // State for Month Selection
+  // --- STATE ---
   const [monthYear, setMonthYear] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
 
-  // Budget States
   const [income, setIncome] = useState<number | "">("");
   const [openingBalance, setOpeningBalance] = useState<number>(0);
+  const [dbTotalAllocated, setDbTotalAllocated] = useState<number>(0); // Total currently saved in DB
   const [isFirstMonth, setIsFirstMonth] = useState<boolean>(false);
   const [currency, setCurrency] = useState<string>("LKR");
   const [showModal, setShowModal] = useState(false);
@@ -40,7 +40,7 @@ export default function BudgetPage() {
   const [editName, setEditName] = useState("");
   const [editBudget, setEditBudget] = useState<number>(0);
 
-  // Custom Toast Notification
+  // --- NOTIFICATIONS ---
   const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
     toast.custom((t) => (
       <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 ${
@@ -67,71 +67,81 @@ export default function BudgetPage() {
     ), { duration: 4000 });
   };
 
-  //  Fetch User Settings & Global Categories
-  useEffect(() => {
-    if (!user?.accountId) return;
-    api.get(`/auth/me`) 
-      .then((res) => setCurrency(res.data.account?.currency || "LKR"))
-      .catch(() => setCurrency("LKR"));
-
-    api.get(`/category/getCategories?accountId=${user.accountId}`)
-      .then((res) => setSuggestedCategories(res.data.categories || []))
-      .catch(() => setSuggestedCategories([]));
-  }, [user]);
-
-  //  Handle Monthly Sync & Opening Balance Check
-  useEffect(() => {
+  
+  const syncBudgetData = async () => {
     if (!user?.accountId || !monthYear) return;
     const [year, month] = monthYear.split("-");
 
-    const syncBudgetData = async () => {
-      try {
-       
-        const firstMonthRes = await api.get(`/budget/is-first-month?accountId=${user.accountId}&month=${month}&year=${year}`);
-        const isFirst = firstMonthRes.data.isFirstMonth;
-        setIsFirstMonth(isFirst);
+    try {
+      // Check if first month
+      const firstMonthRes = await api.get(`/budget/is-first-month?accountId=${user.accountId}&month=${month}&year=${year}`);
+      const isFirst = firstMonthRes.data.isFirstMonth;
+      setIsFirstMonth(isFirst);
 
-        // Fetch opening balance from profile only if it's the first month
-        if (isFirst) {
-          const authRes = await api.get(`/auth/me`);
-          setOpeningBalance(authRes.data.account?.openingBalance || 0);
-        } else {
-          setOpeningBalance(0); 
-        }
-
-        // Fetch existing budget if it exists
-        const res = await api.get(`/budget/view-monthly-allocations?accountId=${user.accountId}&month=${month}&year=${year}`);
-        
-        if (res.data && res.data.allocation) {
-          // Calculate monthly income back from total pool
-          setIncome(res.data.allocation.totalAllocated - (res.data.allocation.carryForwardSavings || 0)); 
-          const existingCats = res.data.categories.map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            budget: c.budget
-          }));
-          setTempAllocations(existingCats);
-          setIsEditingExisting(true);
-        } else {
-          setTempAllocations([]);
-          setIncome("");
-          setIsEditingExisting(false);
-        }
-      } catch (err: any) {
-        setTempAllocations([]);
-        setIncome("");
-        setIsEditingExisting(false);
-        if (err.response?.status !== 404) showToast("System Error: Failed to sync monthly data.", "error");
+      if (isFirst) {
+        const authRes = await api.get(`/auth/me`);
+        setOpeningBalance(authRes.data.account?.openingBalance || 0);
+      } else {
+        setOpeningBalance(0); 
       }
-    };
 
+      //Fetch existing budget
+      const res = await api.get(`/budget/view-monthly-allocations?accountId=${user.accountId}&month=${month}&year=${year}`);
+      
+      if (res.data && res.data.allocation) {
+
+        setDbTotalAllocated(res.data.allocation.totalAllocated);
+        
+        const existingCats = res.data.categories.map((c: any) => ({
+          id: c.id || Math.random().toString(),
+          name: c.name,
+          budget: c.budget
+        }));
+        setTempAllocations(existingCats);
+        setIsEditingExisting(true);
+      } else {
+        setDbTotalAllocated(0);
+        setTempAllocations([]);
+        setIsEditingExisting(false);
+      }
+    } catch (err: any) {
+      setTempAllocations([]);
+      setDbTotalAllocated(0);
+      setIsEditingExisting(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user?.accountId) return;
+    api.get(`/auth/me`).then((res) => setCurrency(res.data.account?.currency || "LKR"));
+    api.get(`/category/getCategories?accountId=${user.accountId}`).then((res) => setSuggestedCategories(res.data.categories || []));
+  }, [user]);
+
+  useEffect(() => {
     syncBudgetData();
   }, [monthYear, user]);
 
-  // AI Suggestions Handler
+  // --- CALCULATIONS ---
+  const totalPool = useMemo(() => {
+    const currentIncomeInput = typeof income === "number" ? income : 0;
+    
+    if (isEditingExisting) {
+      // If editing, pool = Existing DB Money + New Income typed in box
+      return dbTotalAllocated + currentIncomeInput;
+    } else {
+      // If new month, pool = Opening Balance + New Income typed in box
+      return openingBalance + currentIncomeInput;
+    }
+  }, [dbTotalAllocated, openingBalance, income, isEditingExisting]);
+
+  const totalAllocated = useMemo(() => tempAllocations.reduce((s, a) => s + a.budget, 0), [tempAllocations]);
+  const remaining = totalPool - totalAllocated;
+  const percentageAllocated = totalPool > 0 ? Math.min((totalAllocated / totalPool) * 100, 100) : 0;
+
+  // --- HANDLERS ---
   const handleAiSuggest = async () => {
     if (!income || Number(income) <= 0) {
-      showToast("Please enter a monthly income first.", "warning");
+      showToast("Please enter an income amount first.", "warning");
       return;
     }
     setIsAiLoading(true);
@@ -147,23 +157,12 @@ export default function BudgetPage() {
       setTempAllocations(formatted);
       showToast(`AI generated a balanced ${currency} plan!`, "success");
     } catch (err) {
-      showToast("AI service is currently unavailable.", "error");
+      showToast("AI service unavailable.", "error");
     } finally {
       setIsAiLoading(false);
     }
   };
 
-  // Calculations
-  const totalPool = useMemo(() => {
-    const currentIncome = typeof income === "number" ? income : 0;
-    return openingBalance + currentIncome;
-  }, [openingBalance, income]);
-
-  const totalAllocated = useMemo(() => tempAllocations.reduce((s, a) => s + a.budget, 0), [tempAllocations]);
-  const remaining = totalPool - totalAllocated;
-  const percentageAllocated = totalPool > 0 ? Math.min((totalAllocated / totalPool) * 100, 100) : 0;
-
-  // List Management
   const handleAddTemp = (name: string, budget: number) => {
     if (tempAllocations.some(cat => cat.name.toLowerCase() === name.toLowerCase())) {
       showToast(`${name} is already added.`, "warning");
@@ -179,10 +178,10 @@ export default function BudgetPage() {
     setEditingId(null);
   };
 
-  // Submit Logic
   const handleSubmit = async () => {
     if (!user?.accountId) return;
     const [year, month] = monthYear.split("-");
+
     if (totalPool <= 0) return showToast(`Please enter income.`, "warning");
     if (remaining < 0) return showToast("Allocations exceed available funds.", "error");
 
@@ -191,13 +190,15 @@ export default function BudgetPage() {
       await api.post("/budget/monthly-allocations", {
         month: Number(month),
         year: Number(year),
-        income: Number(income),
+        income: Number(income) || 0,
         categories: tempAllocations.map((t) => ({ name: t.name, budget: t.budget })),
       });
-      showToast(isEditingExisting ? "Budget Updated!" : "Budget locked in! 🎉", "success");
-      setTimeout(() => navigate(`/view-monthly-budget?month=${month}&year=${year}`), 1500);
+
+      showToast(isEditingExisting ? "Income Added & Budget Updated!" : "Budget locked in! 🎉", "success");
+      setIncome(""); 
+      await syncBudgetData(); 
     } catch (err: any) {
-      showToast(err?.response?.data?.message || "Failed to save.", "error");
+      showToast("Failed to save.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -208,7 +209,7 @@ export default function BudgetPage() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="min-h-screen bg-slate-50/50 py-10 px-6">
         <div className="max-w-5xl mx-auto">
           
-          {/* Header & Navigation */}
+          {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
               <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
@@ -231,6 +232,7 @@ export default function BudgetPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
             {/* LEFT COLUMN: SETUP */}
             <div className="lg:col-span-5 space-y-6">
               <section className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
@@ -244,7 +246,9 @@ export default function BudgetPage() {
                   </div>
                   <div>
                     <div className="flex justify-between items-end mb-2 ml-1">
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">Monthly Income ({currency})</label>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        {isEditingExisting ? "Add Additional Income" : "Monthly Income"} ({currency})
+                      </label>
                       <button onClick={handleAiSuggest} disabled={isAiLoading || !income} className="flex items-center gap-1.5 text-[10px] font-black uppercase text-indigo-600 hover:text-indigo-700 disabled:text-slate-300 group">
                         {isAiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Sparkles className="w-3 h-3 group-hover:rotate-12 transition-transform" /> AI Suggest</>}
                       </button>
@@ -253,6 +257,11 @@ export default function BudgetPage() {
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">{currency}</span>
                       <input type="number" placeholder="0.00" value={income} onChange={(e) => setIncome(e.target.value === "" ? "" : Number(e.target.value))} className="w-full bg-slate-50 border-none rounded-xl pl-14 pr-4 py-3 text-slate-900 font-bold focus:ring-2 focus:ring-indigo-500" />
                     </div>
+                    {isEditingExisting && (
+                      <p className="mt-2 text-[10px] text-slate-400 font-bold px-1 italic text-right">
+                        Already in pool: {dbTotalAllocated.toLocaleString()} {currency}
+                      </p>
+                    )}
                   </div>
                 </div>
               </section>
@@ -275,8 +284,8 @@ export default function BudgetPage() {
                       </>
                     )}
                     <div className="flex-1 text-center">
-                        <p className="text-[10px] font-black text-slate-500 uppercase">Income</p>
-                        <p className="text-sm font-bold text-emerald-400">{(Number(income) || 0).toLocaleString()}</p>
+                        <p className="text-[10px] font-black text-slate-500 uppercase">{isEditingExisting ? "Existing + New" : "Income"}</p>
+                        <p className="text-sm font-bold text-emerald-400">{totalPool.toLocaleString()}</p>
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -350,7 +359,7 @@ export default function BudgetPage() {
 
                 <div className="p-6 bg-slate-50/50 rounded-b-[2rem] border-t border-slate-100">
                   <button onClick={handleSubmit} disabled={tempAllocations.length === 0 || isSaving} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-lg disabled:bg-slate-300 flex items-center justify-center gap-2 group transition-all hover:bg-slate-800">
-                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isEditingExisting ? 'Update Budget' : 'Lock Monthly Budget'} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
+                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isEditingExisting ? 'Update Budget & Add Income' : 'Lock Monthly Budget'} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>}
                   </button>
                 </div>
               </div>
