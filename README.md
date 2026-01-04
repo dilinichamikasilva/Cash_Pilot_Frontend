@@ -10,23 +10,23 @@ cash-pilot-frontend/
 ├─ src/    
 │ ├─ assets/    
 │ ├─ components/  
-│ ├─ context/ 
-│ ├─ pages/   
-│ ├─ routes/
-│ ├─ service/
-│ ├─ App.css 
-│ ├─ App.tsx    
-│ ├─ index.tsx  
-│ ├─ main.tsx    
-├─ .env
-├─ eslint.config.js
-├─ index.html
-├─ package-lock.json
-├─ package.json 
-├─ README.md   
-├─ tsconfig.app.json
-├─ tsconfig.json   
-├─ tsconfig.node.json 
+│ ├─ context/   
+│ ├─ pages/     
+│ ├─ routes/  
+│ ├─ service/  
+│ ├─ App.css   
+│ ├─ App.tsx      
+│ ├─ index.tsx    
+│ ├─ main.tsx      
+├─ .env  
+├─ eslint.config.js  
+├─ index.html  
+├─ package-lock.json  
+├─ package.json   
+├─ README.md     
+├─ tsconfig.app.json  
+├─ tsconfig.json     
+├─ tsconfig.node.json   
 ├─ vite.config.ts  
 
 
