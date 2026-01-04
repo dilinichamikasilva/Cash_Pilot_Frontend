@@ -9,6 +9,7 @@ import ViewMonthlyBudget from "../pages/ViewMonthlyBudget"
 import UpdateSpendingPage from "../pages/UpdateSpendingPage"
 import SettingsPage from "../pages/SettingsPage"
 import AnalyticsPage from "../pages/AnalyticsPage"
+import ResetPassword from "../pages/ResetPassword"
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -18,6 +19,7 @@ const AppRoutes = () => {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 
 
                 {/* protected pages */}

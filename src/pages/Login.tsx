@@ -16,8 +16,9 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isResetting, setIsResetting] = useState(false); // New state for forgot password
 
-
+  //  Toast Component
   const showToast = (message: string, type: 'success' | 'error' | 'redirect') => {
     toast.custom((t) => (
       <div
@@ -54,14 +55,35 @@ const Login = () => {
     ), { duration: 4000 });
   };
 
+  // --- Forgot Password Logic ---
+  const handleForgotPassword = async () => {
+    if (!email) {
+      showToast("Please enter your email address in the field below first.", 'error');
+      setError("Email required to reset password");
+      return;
+    }
+
+    setIsResetting(true);
+    setError("");
+    
+    try {
+      await api.post("/auth/forgot-password", { email });
+      showToast("A reset link has been sent to your email address.", 'success');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Failed to send reset email.";
+      showToast(msg, 'error');
+      setError(msg);
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      
       const response = await api.post("/auth/login", { email, password });
       const { user, accessToken, refreshToken } = response.data;
 
@@ -69,7 +91,7 @@ const Login = () => {
       localStorage.setItem("refreshToken", refreshToken);
       setUser(user);
 
-      showToast("Logged in successfully! Welcome back to the cash-pilot.", 'success');
+      showToast("Logged in successfully! Welcome back.", 'success');
       navigate("/dashboard");
       
     } catch (err: any) {
@@ -77,7 +99,7 @@ const Login = () => {
       const message = err.response?.data?.message || "Login failed!";
 
       if (status === 404) {
-        showToast("We couldn't find your account. Taking you to the registration desk...", 'redirect');
+        showToast("Account not found. Redirecting to registration...", 'redirect');
         setTimeout(() => navigate("/register", { state: { email } }), 2000);
         return; 
       }
@@ -91,7 +113,6 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] px-4 relative overflow-hidden">
-  
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50 rounded-full blur-3xl opacity-50" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-50 rounded-full blur-3xl opacity-50" />
 
@@ -100,7 +121,6 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-[440px] z-10"
       >
-        {/* Logo Container */}
         <div className="flex flex-col items-center mb-8">
           <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 mb-4 transform hover:rotate-6 transition-transform">
             <img src={logo} alt="CashPilot Logo" className="w-12 h-12 object-contain" />
@@ -134,12 +154,12 @@ const Login = () => {
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
                 <input
                   type="email"
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all outline-none text-slate-700 font-medium"
+                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all outline-none text-slate-700 font-medium disabled:opacity-50"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
                   required
-                  disabled={loading}
+                  disabled={loading || isResetting}
                 />
               </div>
             </div>
@@ -149,29 +169,34 @@ const Login = () => {
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                   Password
                 </label>
-                <button type="button" className="text-xs font-bold text-indigo-600 hover:text-indigo-700">
-                  Forgot?
+                <button 
+                  type="button" 
+                  onClick={handleForgotPassword}
+                  disabled={isResetting}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-700 disabled:text-slate-400"
+                >
+                  {isResetting ? "Sending..." : "Forgot?"}
                 </button>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
                 <input
                   type="password"
-                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all outline-none text-slate-700 font-medium"
+                  className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-600 transition-all outline-none text-slate-700 font-medium disabled:opacity-50"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  disabled={loading}
+                  disabled={loading || isResetting}
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || isResetting}
               className={`w-full relative flex items-center justify-center gap-2 text-white font-bold py-4 rounded-2xl transition-all shadow-xl
-                ${loading 
+                ${(loading || isResetting)
                   ? "bg-indigo-400 cursor-not-allowed shadow-none" 
                   : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100 active:scale-[0.98]"}`}
             >
