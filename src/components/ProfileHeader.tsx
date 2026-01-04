@@ -1,5 +1,4 @@
 import { useAuth } from "../context/authContext";
-import { User as UserIcon } from "lucide-react";
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
