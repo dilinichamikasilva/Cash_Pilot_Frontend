@@ -50,26 +50,6 @@ cash-pilot-frontend/
 * **Icons:** Lucide React & Heroicons
 
 ---
-## 🛠️ Technologies & Tools Used
-
-### **Core Frontend Stack**
-* **Library:** React 19 (Functional Components & Hooks)
-* **Build Tool:** Vite (Ultra-fast development environment)
-* **Language:** TypeScript (Strict typing for robust code)
-* **Styling:** Tailwind CSS (Utility-first CSS) & Framer Motion (Smooth animations)
-* **Routing:** React Router DOM v7
-
-### **State & Data Management**
-* **API Client:** Axios (Interceptors for JWT handling)
-* **Authentication:** @react-oauth/google (Google Sign-In) & jwt-decode
-* **Context API:** Global state management for User Authentication and UI themes.
-
-### **Data Visualization & Reporting**
-* **Charts:** Recharts (Interactive financial data visualization)
-* **PDF Export:** jsPDF & jspdf-autotable (Client-side report generation)
-* **Icons:** Lucide React & Heroicons
-
----
  
 
 ## ⚡ Setup Instructions
