@@ -191,7 +191,7 @@ export default function Dashboard() {
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl font-bold">Recent Movements</h2>
-              <button className="text-indigo-400 text-sm font-bold hover:underline transition-all">View All</button>
+             
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {stats.categories.filter(c => c.spent > 0).slice(0, 4).map((cat) => (
