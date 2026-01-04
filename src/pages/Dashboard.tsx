@@ -6,7 +6,7 @@ import DashboardLayout from "../components/DashboardLayout";
 import StatCard from "../components/StatCard";
 import ChartBox from "../components/ChartBox";
 import { motion } from "framer-motion";
-import { ArrowDownRight, Wallet, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowDownRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface DashboardStats {

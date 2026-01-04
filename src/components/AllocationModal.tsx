@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../service/api";
-import { X, Plus, AlertCircle } from "lucide-react";
+import { X, Plus } from "lucide-react";
 
 export default function AllocationModal({ 
   onClose, 
@@ -68,7 +68,7 @@ export default function AllocationModal({
           </div>
 
           <div className="space-y-4">
-            
+
             {/* Existing Categories */}
             <div>
               <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">

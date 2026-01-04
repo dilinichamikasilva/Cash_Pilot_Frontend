@@ -4,7 +4,7 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 
 const ProfilePictureUploader = () => {
-  const { user, setUser } = useAuth();
+  const {  setUser } = useAuth();
   const [picture, setPicture] = useState("");
 
   const updatePicture = async () => {

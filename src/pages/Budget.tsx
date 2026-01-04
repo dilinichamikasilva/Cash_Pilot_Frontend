@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/authContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { 
   Plus, Trash2, Calendar, CheckCircle2, 
   ArrowRight, PieChart, AlertCircle, Receipt, Loader2, Sparkles, Edit3, X, Check
@@ -15,7 +15,7 @@ type TempAlloc = { id: string; name: string; budget: number };
 
 export default function BudgetPage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
+
 
   // --- STATE ---
   const [monthYear, setMonthYear] = useState(() => {
@@ -232,7 +232,7 @@ export default function BudgetPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
+
             {/* LEFT COLUMN: SETUP */}
             <div className="lg:col-span-5 space-y-6">
               <section className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">

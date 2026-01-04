@@ -11,11 +11,8 @@ import {
   ArrowUpRight, 
   Search,
   AlertCircle,
-  CheckCircle2,
-  XCircle,
   Loader2
 } from "lucide-react";
-import toast from "react-hot-toast";
 import DashboardLayout from "../components/DashboardLayout";
 import api from "../service/api"; 
 
@@ -33,33 +30,7 @@ const ViewMonthlyBudget = () => {
   const [currency, setCurrency] = useState("Rs."); 
   const [loading, setLoading] = useState(true);
 
-  // --- Premium Toast Helper ---
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    toast.custom((t) => (
-      <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 ${
-        type === 'success' ? 'border-emerald-500' : type === 'error' ? 'border-rose-500' : 'border-indigo-500'
-      }`}>
-        <div className="flex-1 w-0 p-4">
-          <div className="flex items-start">
-            <div className="flex-shrink-0 pt-0.5">
-              {type === 'success' && <CheckCircle2 className="h-10 w-10 text-emerald-500" />}
-              {type === 'error' && <XCircle className="h-10 w-10 text-rose-500" />}
-              {type === 'info' && <AlertCircle className="h-10 w-10 text-indigo-500" />}
-            </div>
-            <div className="ml-3 flex-1">
-              <p className="text-sm font-bold text-slate-900">
-                {type === 'success' ? 'Success' : type === 'error' ? 'Report Error' : 'Notice'}
-              </p>
-              <p className="mt-1 text-sm text-slate-500 font-medium">{message}</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex border-l border-slate-100">
-          <button onClick={() => toast.dismiss(t.id)} className="w-full p-4 text-sm font-bold text-slate-400 hover:text-slate-600 focus:outline-none">Close</button>
-        </div>
-      </div>
-    ), { duration: 4000 });
-  };
+  // Removed unused 'showToast' function to fix TS6133 error
 
   useEffect(() => {
     if (authLoading) return;
@@ -67,34 +38,34 @@ const ViewMonthlyBudget = () => {
       setLoading(false);
       return;
     }
-    fetchData(month, year, true); 
+    fetchData(month, year); 
   }, [accountId, authLoading]);
 
-const fetchData = async (m: number, y: number, isInitial = false) => {
-  if (!accountId) return;
-  setLoading(true);
-  try {
-    const [res, accountRes] = await Promise.all([
-      getMonthlyAllocation(accountId, m, y),
-      api.get(`/account/${accountId}`)
-    ]);
+  // Removed unused 'isInitial' parameter to fix TS6133 error
+  const fetchData = async (m: number, y: number) => {
+    if (!accountId) return;
+    setLoading(true);
+    try {
+      const [res, accountRes] = await Promise.all([
+        getMonthlyAllocation(accountId, m, y),
+        api.get(`/account/${accountId}`)
+      ]);
 
-    // Ensure properties exist before setting state
-    if (res && res.allocation && res.totals) {
-      setData(res);
-    } else {
-      setData(null); 
+      if (res && res.allocation && res.totals) {
+        setData(res);
+      } else {
+        setData(null);
+      }
+      
+      if (accountRes.data?.account?.currency) {
+        setCurrency(accountRes.data.account.currency);
+      }
+    } catch (err) {
+      setData(null);
+    } finally {
+      setLoading(false);
     }
-    
-    if (accountRes.data?.account?.currency) {
-      setCurrency(accountRes.data.account.currency);
-    }
-  } catch (err) {
-    setData(null);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleView = () => fetchData(month, year);
 
@@ -123,7 +94,6 @@ const fetchData = async (m: number, y: number, isInitial = false) => {
       <div className="min-h-screen bg-slate-50/50 py-10 px-6">
         <div className="max-w-5xl mx-auto">
           
-          {/* TOP NAVIGATION & SELECTORS */}
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-6">
             <div className="flex items-center gap-4">
               <Link to="/budget" className="p-2 hover:bg-white rounded-full transition-colors border border-transparent hover:border-slate-200">
@@ -177,7 +147,6 @@ const fetchData = async (m: number, y: number, isInitial = false) => {
             ) : (
               <motion.div variants={containerVars} initial="hidden" animate="show" className="space-y-8">
                 
-                {/* SUMMARY CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
                     { label: "Total Budget", val: data.allocation.totalAllocated, icon: <Wallet className="text-blue-600" />, bg: "bg-blue-50" },
@@ -190,14 +159,12 @@ const fetchData = async (m: number, y: number, isInitial = false) => {
                       </div>
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{metric.label}</p>
                       <h2 className={`text-2xl font-black mt-1 ${metric.isEmph && metric.val < 0 ? 'text-red-600' : 'text-slate-900'}`}>
-                        {/* DYNAMIC CURRENCY APPLIED HERE */}
                         {currency} {metric.val.toLocaleString()}
                       </h2>
                     </motion.div>
                   ))}
                 </div>
 
-                {/* CATEGORIES TABLE */}
                 <motion.div variants={itemVars} className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
                   <div className="p-8 border-b border-slate-50">
                     <h3 className="text-xl font-bold text-slate-900">Category Breakdown</h3>
@@ -205,7 +172,7 @@ const fetchData = async (m: number, y: number, isInitial = false) => {
                   <div className="p-8 pt-4">
                     <div className="space-y-8">
                       {data.categories.map((cat: any) => {
-                        const usagePercent = Math.min((cat.spent / cat.budget) * 100, 100);
+                        const usagePercent = cat.budget > 0 ? Math.min((cat.spent / cat.budget) * 100, 100) : 0;
                         const isOver = cat.spent > cat.budget;
 
                         return (
@@ -214,7 +181,6 @@ const fetchData = async (m: number, y: number, isInitial = false) => {
                               <div>
                                 <h4 className="font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{cat.name}</h4>
                                 <p className="text-xs font-bold text-slate-400 uppercase">
-                                  {/* DYNAMIC CURRENCY APPLIED HERE */}
                                   Spent {currency} {cat.spent.toLocaleString()} of {currency} {cat.budget.toLocaleString()}
                                 </p>
                               </div>
@@ -223,7 +189,6 @@ const fetchData = async (m: number, y: number, isInitial = false) => {
                               </div>
                             </div>
                             
-                            {/* Progress Bar */}
                             <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
                               <motion.div
                                 initial={{ width: 0 }}

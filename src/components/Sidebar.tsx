@@ -1,4 +1,4 @@
-import React, { useState, useMemo, type Dispatch, type SetStateAction } from "react";
+import { useState, useMemo, type Dispatch, type SetStateAction } from "react";
 import {
   LayoutDashboard,
   BarChart3,
@@ -30,7 +30,7 @@ const MOTIVATIONAL_QUOTES = [
   { text: "Financial freedom is available to those who learn about it and work for it.", author: "Robert Kiyosaki" }
 ];
 
-export default function Sidebar({ open, setOpen, mobileOpen, setMobileOpen }: SidebarProps) {
+export default function Sidebar({ open, mobileOpen, setMobileOpen }: SidebarProps) {
   const location = useLocation();
   const { logout } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
