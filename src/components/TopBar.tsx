@@ -12,12 +12,18 @@ import {
   LogOut,
   AlertCircle,
   TrendingUp,
-  ArrowRight
+  ArrowRight,
+  Menu 
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import NotificationDropdown from "./NotificationDropdown";
 
-export default function Topbar() {
+
+interface TopbarProps {
+  onMenuClick: () => void;
+}
+
+export default function Topbar({ onMenuClick }: TopbarProps) {
   const { user, logout } = useAuth(); 
   const navigate = useNavigate();
 
@@ -126,9 +132,18 @@ export default function Topbar() {
       </AnimatePresence>
 
       <header className="sticky top-0 z-40 w-full h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 md:px-10 flex items-center justify-between">
+        
+        {/* --- MOBILE TOGGLE BUTTON --- */}
+        <button 
+          onClick={onMenuClick}
+          className="lg:hidden p-2.5 mr-4 rounded-xl bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-slate-200/50 flex-shrink-0"
+        >
+          <Menu size={22} />
+        </button>
+
         {/* --- Search Bar & Instant Category View --- */}
         <div className="flex-1 relative" ref={searchRef}>
-          <div className="hidden md:flex items-center bg-slate-50 border border-slate-200/60 px-4 py-2 rounded-2xl gap-3 w-full max-w-sm group focus-within:ring-2 ring-indigo-500/20 transition-all">
+          <div className="hidden sm:flex items-center bg-slate-50 border border-slate-200/60 px-4 py-2 rounded-2xl gap-3 w-full max-w-sm group focus-within:ring-2 ring-indigo-500/20 transition-all">
             <Search size={18} className="text-slate-400 group-focus-within:text-indigo-500" />
             <input 
               type="text" 
@@ -197,7 +212,8 @@ export default function Topbar() {
         </div>
 
         {/* --- Right Actions --- */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
+  
           <div className="relative" ref={notificationRef}>
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
@@ -206,12 +222,18 @@ export default function Topbar() {
               <Bell size={22} />
               {hasAlerts && <span className="absolute top-2.5 right-3 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full" />}
             </button>
+
             <AnimatePresence>
-              {showNotifications && <NotificationDropdown categories={categories} onRefresh={fetchData} />}
+              {showNotifications && (
+                
+                <div className="fixed inset-x-4 top-20 md:absolute md:top-full md:right-0 md:inset-x-auto mt-2 z-50">
+                  <NotificationDropdown categories={categories} onRefresh={fetchData} />
+                </div>
+              )}
             </AnimatePresence>
           </div>
 
-          <div className="h-8 w-[1px] bg-slate-100 mx-2 hidden sm:block" />
+          <div className="h-8 w-[1px] bg-slate-100 mx-1 hidden sm:block" />
 
           <div className="relative" ref={profileRef}>
             <button onClick={() => setShowProfileMenu(!showProfileMenu)} className="flex items-center gap-3 hover:bg-slate-50 p-1 pr-3 rounded-2xl transition-all group">
