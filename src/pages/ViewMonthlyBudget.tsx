@@ -11,10 +11,13 @@ import {
   ArrowUpRight, 
   Search,
   AlertCircle,
-  Loader2
+  Loader2,
+  Download 
 } from "lucide-react";
 import DashboardLayout from "../components/DashboardLayout";
 import api from "../service/api"; 
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const ViewMonthlyBudget = () => {
   const { user, loading: authLoading } = useAuth();
@@ -30,8 +33,6 @@ const ViewMonthlyBudget = () => {
   const [currency, setCurrency] = useState("Rs."); 
   const [loading, setLoading] = useState(true);
 
-  // Removed unused 'showToast' function to fix TS6133 error
-
   useEffect(() => {
     if (authLoading) return;
     if (!accountId) {
@@ -41,7 +42,6 @@ const ViewMonthlyBudget = () => {
     fetchData(month, year); 
   }, [accountId, authLoading]);
 
-  // Removed unused 'isInitial' parameter to fix TS6133 error
   const fetchData = async (m: number, y: number) => {
     if (!accountId) return;
     setLoading(true);
@@ -68,6 +68,68 @@ const ViewMonthlyBudget = () => {
   };
 
   const handleView = () => fetchData(month, year);
+
+  // --- PDF GENERATION 
+  const generatePDF = () => {
+    if (!data) return;
+
+    const doc = new jsPDF();
+    const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date(year, month - 1));
+
+    
+    doc.setFontSize(22);
+    doc.setTextColor(79, 70, 229); 
+    doc.text("CashPilot Financial Report", 14, 20);
+    
+   
+    doc.setFontSize(12);
+    doc.setTextColor(100);
+    doc.text(`Period: ${monthName} ${year}`, 14, 28);
+    doc.text(`Account ID: ${accountId}`, 14, 34);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 40);
+
+    
+    autoTable(doc, {
+      startY: 50,
+      head: [['Financial Summary', 'Amount']],
+      body: [
+        ['Total Monthly Budget', `${currency} ${data.allocation.totalAllocated.toLocaleString()}`],
+        ['Total Amount Allocated', `${currency} ${data.totals.allocatedSum.toLocaleString()}`],
+        ['Remaining Balance', `${currency} ${data.totals.remaining.toLocaleString()}`],
+      ],
+      headStyles: { fillColor: [79, 70, 229] },
+      theme: 'striped'
+    });
+
+    
+    const tableRows = data.categories.map((cat: any) => [
+      cat.name,
+      `${currency} ${cat.budget.toLocaleString()}`,
+      `${currency} ${cat.spent.toLocaleString()}`,
+      `${cat.budget > 0 ? ((cat.spent / cat.budget) * 100).toFixed(1) : 0}%`
+    ]);
+
+    doc.setFontSize(16);
+    doc.setTextColor(30, 41, 59); // Slate-800
+    doc.text("Category Breakdown", 14, (doc as any).lastAutoTable.finalY + 15);
+
+    autoTable(doc, {
+      startY: (doc as any).lastAutoTable.finalY + 20,
+      head: [['Category Name', 'Budgeted', 'Actual Spent', 'Usage %']],
+      body: tableRows,
+      headStyles: { fillColor: [51, 65, 85] },
+      didParseCell: (data) => {
+       
+        if (data.column.index === 3 && parseFloat(data.cell.text[0]) > 100) {
+          data.cell.styles.textColor = [220, 38, 38];
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    });
+
+    // Save the PDF
+    doc.save(`CashPilot_Report_${monthName}_${year}.pdf`);
+  };
 
   if (authLoading || loading) {
     return (
@@ -107,31 +169,44 @@ const ViewMonthlyBudget = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100">
-              <select
-                value={month}
-                onChange={(e) => setMonth(Number(e.target.value))}
-                className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer px-4"
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                  <option key={m} value={m}>{new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date(2024, m-1))}</option>
-                ))}
-              </select>
-              <select
-                value={year}
-                onChange={(e) => setYear(Number(e.target.value))}
-                className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer px-4 border-l border-slate-100"
-              >
-                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((y) => (
-                  <option key={y} value={y}>{y}</option>
-                ))}
-              </select>
-              <button
-                onClick={handleView}
-                className="bg-indigo-600 text-white p-2.5 rounded-xl hover:bg-indigo-700 transition-all active:scale-95"
-              >
-                <Search className="w-4 h-4" />
-              </button>
+            <div className="flex items-center gap-3">
+              {/* PDF BUTTON */}
+              {data && (
+                <button
+                  onClick={generatePDF}
+                  className="flex items-center gap-2 bg-white text-slate-700 px-4 py-2.5 rounded-xl border border-slate-200 font-bold text-sm hover:bg-slate-50 transition-all shadow-sm active:scale-95"
+                >
+                  <Download className="w-4 h-4 text-indigo-600" />
+                  Export PDF
+                </button>
+              )}
+
+              <div className="flex gap-2 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-100">
+                <select
+                  value={month}
+                  onChange={(e) => setMonth(Number(e.target.value))}
+                  className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer px-4"
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                    <option key={m} value={m}>{new Intl.DateTimeFormat('en-US', { month: 'short' }).format(new Date(2024, m-1))}</option>
+                  ))}
+                </select>
+                <select
+                  value={year}
+                  onChange={(e) => setYear(Number(e.target.value))}
+                  className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer px-4 border-l border-slate-100"
+                >
+                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleView}
+                  className="bg-indigo-600 text-white p-2.5 rounded-xl hover:bg-indigo-700 transition-all active:scale-95"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
