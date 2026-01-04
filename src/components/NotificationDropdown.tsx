@@ -5,7 +5,7 @@ import { type CategoryItem } from "../service/budgetService";
 
 interface NotificationDropdownProps {
   categories: CategoryItem[];
-  onRefresh: () => Promise<void>; // Receives the refresh function from Topbar
+  onRefresh: () => Promise<void>; 
 }
 
 export default function NotificationDropdown({ categories, onRefresh }: NotificationDropdownProps) {
@@ -52,8 +52,8 @@ export default function NotificationDropdown({ categories, onRefresh }: Notifica
 
   const handleRefreshClick = async () => {
     setIsRefreshing(true);
-    await onRefresh(); // Executes the fetch logic in Topbar
-    setTimeout(() => setIsRefreshing(false), 500); // Small delay for visual feedback
+    await onRefresh(); 
+    setTimeout(() => setIsRefreshing(false), 500); 
   };
 
   return (

@@ -33,7 +33,7 @@ export default function ChartBox({ title, data }: ChartBoxProps) {
               tick={{fill: '#64748b', fontSize: 12, fontWeight: 'bold'}} 
               dy={10}
             />
-            {/* YAxis is hidden to keep it clean, as we show labels on the points */}
+           
             <YAxis hide domain={[0, 'dataMax + 20000']} /> 
             
             <Tooltip 
@@ -54,12 +54,11 @@ export default function ChartBox({ title, data }: ChartBoxProps) {
   dot={{ r: 6, fill: '#6366f1', strokeWidth: 3, stroke: '#fff' }}
   activeDot={{ r: 8 }}
 >
-  {/* FIXED LABEL LIST FORMATTER */}
+
   <LabelList 
     dataKey="expenses" 
     position="top" 
     offset={15}
-    // We change the type to any or (any) => string to bypass the strict Recharts LabelFormatter type
     formatter={(value: any) => value ? Number(value).toLocaleString() : ""}
     style={{ fill: '#1e293b', fontSize: 12, fontWeight: '900' }}
   />
