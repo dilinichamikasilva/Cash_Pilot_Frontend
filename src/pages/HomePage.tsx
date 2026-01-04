@@ -146,14 +146,64 @@ const HomePage: React.FC = () => {
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1 }}>
               <div className="absolute -inset-4 bg-gradient-to-tr from-blue-100 to-teal-100 rounded-[3rem] blur-3xl opacity-50 -z-10" />
               <div className="bg-white/80 backdrop-blur-xl border border-white p-4 rounded-[2.5rem] shadow-2xl">
-                <div className="bg-slate-50 rounded-[2rem] h-[400px] flex items-center justify-center border border-slate-100 overflow-hidden relative">
-                  <img src={heroBg} className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" alt="preview-bg" />
-                  <div className="text-center p-10 relative z-10">
-                    <div className="w-20 h-20 bg-white rounded-3xl shadow-md mx-auto mb-6 flex items-center justify-center">
-                      <BarChart3 className="w-10 h-10 text-blue-600" />
+
+                {/* VISUAL INSIGHTS */}
+                <div className="bg-slate-50 rounded-[2rem] h-[400px] flex items-center justify-center border border-slate-100 overflow-hidden relative p-6">
+                  
+                  <img src={heroBg} className="absolute inset-0 w-full h-full object-cover opacity-10 blur-md" alt="preview-bg" />
+                  
+                  <div className="w-full h-full flex flex-col gap-4 relative z-10">
+                    
+                    <motion.div 
+                      initial={{ y: 20, opacity: 0 }} 
+                      animate={{ y: 0, opacity: 1 }} 
+                      transition={{ delay: 0.2 }}
+                      className="bg-gradient-to-br from-slate-900 to-slate-800 p-5 rounded-3xl shadow-lg"
+                    >
+                      <p className="text-slate-400 text-xs font-medium uppercase tracking-wider">Total Balance</p>
+                      <h4 className="text-2xl font-bold text-white mt-1">$12,450.00</h4>
+                      <div className="mt-4 flex justify-between items-center">
+                        <div className="text-[10px] text-emerald-400 font-bold bg-emerald-400/10 px-2 py-1 rounded-lg">+12.5% this month</div>
+                        <div className="flex -space-x-2">
+                          <div className="w-6 h-6 rounded-full border-2 border-slate-800 bg-blue-500" />
+                          <div className="w-6 h-6 rounded-full border-2 border-slate-800 bg-teal-500" />
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    
+                    <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex-1 flex flex-col justify-between">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-bold text-slate-800">Weekly Activity</span>
+                        <BarChart3 className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex items-end justify-between gap-2 h-20 px-2">
+                        {[40, 70, 45, 90, 65, 50, 80].map((height, i) => (
+                          <motion.div 
+                            key={i}
+                            initial={{ height: 0 }}
+                            animate={{ height: `${height}%` }}
+                            transition={{ delay: 0.5 + (i * 0.1), duration: 0.8 }}
+                            className={`w-full rounded-t-full ${i === 3 ? 'bg-blue-600' : 'bg-slate-200'}`}
+                          />
+                        ))}
+                      </div>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-800">Visual Insights</h3>
-                    <p className="text-slate-500 text-sm mt-2">Personalized Financial Dashboard</p>
+
+                    
+                    <motion.div 
+                      animate={{ y: [0, -10, 0] }}
+                      transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                      className="absolute -right-2 top-1/2 bg-white p-3 rounded-2xl shadow-xl border border-slate-50 flex items-center gap-3 w-48"
+                    >
+                      <div className="w-8 h-8 bg-orange-100 rounded-xl flex items-center justify-center">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-800">Starbucks Coffee</p>
+                        <p className="text-[8px] text-slate-400">-$4.50 • Just now</p>
+                      </div>
+                    </motion.div>
                   </div>
                 </div>
               </div>
