@@ -96,7 +96,7 @@ export default function BudgetPage() {
           const authRes = await api.get(`/auth/me`);
           setOpeningBalance(authRes.data.account?.openingBalance || 0);
         } else {
-          setOpeningBalance(0); /
+          setOpeningBalance(0); 
         }
 
         // Fetch existing budget if it exists

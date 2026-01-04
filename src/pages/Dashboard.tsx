@@ -85,7 +85,7 @@ export default function Dashboard() {
           remaining: budgetData.totals.remaining,
           categories: budgetData.categories,
           currency: userCurrency,
-          trends: analyticsRes.data.trends /
+          trends: analyticsRes.data.trends 
         });
       } catch (err: any) {
         console.error("Dashboard fetch error:", err);
