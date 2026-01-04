@@ -15,6 +15,7 @@ interface DashboardStats {
   remaining: number;
   categories: CategoryItem[]; 
   currency: string;
+  trends: any[]; // Added to store actual chart data
 }
 
 export default function Dashboard() {
@@ -25,11 +26,13 @@ export default function Dashboard() {
     totalSpent: 0,
     remaining: 0,
     categories: [],
-    currency: "Rs." 
+    currency: "Rs.",
+    trends: [] // Initialize empty trends
   });
   
   const [loading, setLoading] = useState(true);
 
+  // Toast helper (kept from your original code)
   const showToast = (message: string, type: 'success' | 'error' | 'info') => {
     toast.custom((t) => (
       <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 border-l-4 ${
@@ -57,57 +60,51 @@ export default function Dashboard() {
     ), { duration: 4000 });
   };
 
-useEffect(() => {
-  const fetchDashboardData = async () => {
-    if (!user?.accountId) return;
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!user?.accountId) return;
 
-    try {
-      const now = new Date();
-      
-      const [budgetData, accountRes] = await Promise.all([
-        getMonthlyAllocation(user.accountId, now.getMonth() + 1, now.getFullYear()),
-        api.get(`/account/${user.accountId}`) 
-      ]);
+      try {
+        const now = new Date();
+        
+        // 1. Fetch Budget, Account, AND Analytics Trends simultaneously
+        const [budgetData, accountRes, analyticsRes] = await Promise.all([
+          getMonthlyAllocation(user.accountId, now.getMonth() + 1, now.getFullYear()),
+          api.get(`/account/${user.accountId}`),
+          // Fetching 6 months of trends for the ChartBox
+          api.get('/analytics/summary', { params: { months: 6, accountId: user.accountId } })
+        ]);
 
-      const userCurrency = accountRes.data?.account?.currency || "Rs.";
-      const spent = budgetData.categories.reduce((sum: number, c: CategoryItem) => sum + c.spent, 0);
-      
-      setStats({
-        totalBudget: budgetData.allocation.totalAllocated,
-        totalSpent: spent,
-        remaining: budgetData.totals.remaining,
-        categories: budgetData.categories,
-        currency: userCurrency 
-      });
-    } catch (err: any) {
-      console.error("Dashboard fetch error:", err);
-      
-      // FIX: Check if the error is a 404 (Budget not found for this month)
-      const is404 = err.response?.status === 404;
-
-      if (!is404) {
-        // Only show the toast for REAL system errors (500, Network Down, etc.)
-        showToast("Failed to sync your latest financial data.", "error");
-      } else {
-        // Optional: You could set stats to 0 here explicitly if you want to be safe
-        console.log("No budget found for this month - showing empty state.");
+        const userCurrency = accountRes.data?.account?.currency || "Rs.";
+        const spent = budgetData.categories.reduce((sum: number, c: CategoryItem) => sum + c.spent, 0);
+        
+        setStats({
+          totalBudget: budgetData.allocation.totalAllocated,
+          totalSpent: spent,
+          remaining: budgetData.totals.remaining,
+          categories: budgetData.categories,
+          currency: userCurrency,
+          trends: analyticsRes.data.trends // Actual spending trends from DB
+        });
+      } catch (err: any) {
+        console.error("Dashboard fetch error:", err);
+        const is404 = err.response?.status === 404;
+        if (!is404) {
+          showToast("Failed to sync your latest financial data.", "error");
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchDashboardData();
-}, [user?.accountId]);
+    fetchDashboardData();
+  }, [user?.accountId]);
 
+  // Framer Motion Variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
-
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     show: { y: 0, opacity: 1 }
@@ -124,72 +121,39 @@ useEffect(() => {
 
   return (
     <DashboardLayout>
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="max-w-7xl mx-auto px-4 py-8"
-      >
+      <motion.div variants={containerVariants} initial="hidden" animate="show" className="max-w-7xl mx-auto px-4 py-8">
+        
+        {/* HEADER */}
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">
               Welcome back, {user?.name?.split(' ')[0]}! 👋
             </h1>
-            <p className="text-slate-500 font-medium">Here's what's happening with your money today.</p>
-          </div>
-          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-             <div className="bg-indigo-50 p-2 rounded-xl">
-                <Wallet className="w-5 h-5 text-indigo-600" />
-             </div>
-             <div className="pr-4">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Default Account</p>
-                <p className="text-sm font-bold text-slate-700">Main Savings</p>
-             </div>
+            <p className="text-slate-500 font-medium">Actual spending data synced from your records.</p>
           </div>
         </header>
 
-        {/* Updated Grid with h-full items */}
+        {/* STAT CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <motion.div variants={itemVariants} className="flex">
-            <StatCard 
-              title="Monthly Income" 
-              value={`${stats.currency} ${stats.totalBudget.toLocaleString()}`} 
-              gradient="from-slate-900 to-slate-800" 
-              className="w-full h-full" // Ensure card stretches
-            />
+            <StatCard title="Monthly Income" value={`${stats.currency} ${stats.totalBudget.toLocaleString()}`} gradient="from-slate-900 to-slate-800" className="w-full h-full" />
           </motion.div>
-
           <motion.div variants={itemVariants} className="flex">
-            <StatCard 
-              title="Total Spent" 
-              value={`${stats.currency} ${stats.totalSpent.toLocaleString()}`} 
-              gradient="from-rose-500 to-orange-500" 
-              className="w-full h-full"
-            />
+            <StatCard title="Total Spent" value={`${stats.currency} ${stats.totalSpent.toLocaleString()}`} gradient="from-rose-500 to-orange-500" className="w-full h-full" />
           </motion.div>
-
           <motion.div variants={itemVariants} className="flex">
-            <StatCard 
-              title="Available" 
-              value={`${stats.currency} ${stats.remaining.toLocaleString()}`} 
-              gradient="from-indigo-600 to-purple-600" 
-              className="w-full h-full"
-            />
+            <StatCard title="Available" value={`${stats.currency} ${stats.remaining.toLocaleString()}`} gradient="from-indigo-600 to-purple-600" className="w-full h-full" />
           </motion.div>
-
           <motion.div variants={itemVariants} className="flex">
-            <StatCard 
-              title="Savings Rate" 
-              value={`${stats.totalBudget > 0 ? Math.max(0, Math.round((stats.remaining / stats.totalBudget) * 100)) : 0}%`} 
-              gradient="from-emerald-500 to-teal-500" 
-              className="w-full h-full"
-            />
+            <StatCard title="Savings Rate" value={`${stats.totalBudget > 0 ? Math.max(0, Math.round((stats.remaining / stats.totalBudget) * 100)) : 0}%`} gradient="from-emerald-500 to-teal-500" className="w-full h-full" />
           </motion.div>
         </div>
 
+        {/* CHART & CATEGORIES SECTION */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
           <motion.div variants={itemVariants} className="lg:col-span-2">
-            <ChartBox title="Spending Trends" />
+            {/* PASSING REAL DATA HERE */}
+            <ChartBox title="Spending Trends" data={stats.trends} />
           </motion.div>
           
           <motion.div variants={itemVariants} className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm">
@@ -221,6 +185,7 @@ useEffect(() => {
           </motion.div>
         </div>
 
+        {/* RECENT MOVEMENTS (Strictly showing actual spends) */}
         <motion.div variants={itemVariants} className="bg-slate-900 rounded-[3rem] p-8 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 blur-[100px] rounded-full"></div>
           <div className="relative z-10">
