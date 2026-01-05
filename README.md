@@ -69,7 +69,8 @@ npm install
 Create a `.env` file in the root directory and add the following keys. Replace the placeholders with your actual credentials:
 
 ```bash
-VITE_GOOGLE_CLIENT_ID=google_client_id
+VITE_GOOGLE_CLIENT_ID=google_client_id  
+VITE_API_URL=your_api_url
 ```
 
 ###  4. Start Development Server
