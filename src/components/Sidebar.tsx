@@ -7,7 +7,8 @@ import {
   LogOut,
   ChevronRight,
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Users
 } from "lucide-react";
 import logo from "../assets/cashPilot-logo.png";
 import { Link, useLocation } from "react-router-dom";
@@ -32,7 +33,7 @@ const MOTIVATIONAL_QUOTES = [
 
 export default function Sidebar({ open, mobileOpen, setMobileOpen }: SidebarProps) {
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout , user } = useAuth();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
  
@@ -42,11 +43,17 @@ export default function Sidebar({ open, mobileOpen, setMobileOpen }: SidebarProp
   }, []);
 
   const menuItems = [
-    { path: "/dashboard", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
-    { path: "/budget", icon: <PiggyBank size={20} />, label: "Budget Planner" },
-    { path: "/analytics", icon: <BarChart3 size={20} />, label: "Analytics" },
-    { path: "/settings", icon: <Settings size={20} />, label: "Settings" },
-  ];
+  { path: "/dashboard", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
+  { path: "/budget", icon: <PiggyBank size={20} />, label: "Budget Planner" },
+  { path: "/analytics", icon: <BarChart3 size={20} />, label: "Analytics" },
+  // ADD THIS BLOCK:
+  ...(user?.roles.includes("OWNER") ? [
+    { path: "/team", icon: <Users size={20} />, label: "Manage Team" }
+  ] : []),
+  { path: "/settings", icon: <Settings size={20} />, label: "Settings" },
+];
+
+  
 
   return (
     <>

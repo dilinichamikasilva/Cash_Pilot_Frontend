@@ -12,6 +12,7 @@ import AnalyticsPage from "../pages/AnalyticsPage"
 import ResetPassword from "../pages/ResetPassword"
 import DocsPage from "../pages/DocsPage"
 import ProtectedRoute from "./ProtectedRoute";
+import TeamPage from "../pages/TeamPage"
 
 const AppRoutes = () => {
     return (
@@ -78,6 +79,14 @@ const AppRoutes = () => {
                     path="/analytics" element={
                         <ProtectedRoute>
                             <AnalyticsPage  />
+                        </ProtectedRoute>
+                    } 
+                />
+
+                <Route 
+                    path="/team" element={
+                        <ProtectedRoute>
+                            <TeamPage  />
                         </ProtectedRoute>
                     } 
                 />
