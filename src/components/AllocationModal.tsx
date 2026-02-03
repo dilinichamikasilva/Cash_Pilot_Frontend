@@ -41,7 +41,7 @@ export default function AllocationModal({
       return;
     }
 
-    // Save category to backend if it's a new name
+    // Save category
     if (newName.trim()) {
       try {
         await api.post("/category/saveCategory", { accountId, name });
