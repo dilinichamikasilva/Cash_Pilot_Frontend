@@ -86,7 +86,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
   return (
     <>
-      {/* --- Logout Confirmation Modal --- */}
+      {/*  Logout Confirmation Modal  */}
       <AnimatePresence>
         {showLogoutConfirm && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -133,7 +133,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
 
       <header className="sticky top-0 z-40 w-full h-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 md:px-10 flex items-center justify-between">
         
-        {/* --- MOBILE TOGGLE BUTTON --- */}
+        {/*  MOBILE TOGGLE BUTTON  */}
         <button 
           onClick={onMenuClick}
           className="lg:hidden p-2.5 mr-4 rounded-xl bg-slate-50 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-all border border-slate-200/50 flex-shrink-0"
@@ -141,7 +141,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           <Menu size={22} />
         </button>
 
-        {/* --- Search Bar & Instant Category View --- */}
+        {/*  Search Bar & Instant Category View  */}
         <div className="flex-1 relative" ref={searchRef}>
           <div className="hidden sm:flex items-center bg-slate-50 border border-slate-200/60 px-4 py-2 rounded-2xl gap-3 w-full max-w-sm group focus-within:ring-2 ring-indigo-500/20 transition-all">
             <Search size={18} className="text-slate-400 group-focus-within:text-indigo-500" />
@@ -211,7 +211,7 @@ export default function Topbar({ onMenuClick }: TopbarProps) {
           </AnimatePresence>
         </div>
 
-        {/* --- Right Actions --- */}
+        {/*  Right Actions  */}
         <div className="flex items-center gap-2 md:gap-4">
   
           <div className="relative" ref={notificationRef}>
